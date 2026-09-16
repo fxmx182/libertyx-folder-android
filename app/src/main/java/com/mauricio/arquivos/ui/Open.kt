@@ -1,0 +1,55 @@
+package com.mauricio.arquivos.ui
+
+import android.content.ClipData
+import android.content.Context
+import android.content.Intent
+import android.net.Uri
+import android.widget.Toast
+import androidx.core.content.FileProvider
+import com.mauricio.arquivos.BuildConfig
+import com.mauricio.arquivos.fs.FileEntry
+import com.mauricio.arquivos.fs.Loc
+import com.mauricio.arquivos.smb.SmbProvider
+
+object Open {
+    fun uri(context: Context, loc: Loc): Uri = when (loc) {
+        is Loc.Local -> FileProvider.getUriForFile(context, "${BuildConfig.APPLICATION_ID}.files", loc.file)
+        is Loc.Smb -> SmbProvider.uri(loc)
+        is Loc.Vault -> com.mauricio.arquivos.vault.VaultProvider.uri(loc)
+    }
+
+    fun open(context: Context, e: FileEntry, escolher: Boolean = false) {
+        val i = Intent(Intent.ACTION_VIEW)
+            .setDataAndType(uri(context, e.loc), Mime.of(e.name))
+            .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_ACTIVITY_NEW_TASK)
+        try {
+            context.startActivity(if (escolher) Intent.createChooser(i, "Abrir com").addFlags(Intent.FLAG_ACTIVITY_NEW_TASK) else i)
+        } catch (_: Exception) {
+            // Sem app para o tipo exato: oferece todos.
+            try {
+                context.startActivity(
+                    Intent.createChooser(Intent(i).setDataAndType(i.data, "*/*"), "Abrir com")
+                        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                )
+            } catch (_: Exception) {
+                Toast.makeText(context, "Nenhum app abre este arquivo", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    fun share(context: Context, itens: List<FileEntry>) {
+        val arquivos = itens.filter { !it.isDir }
+        if (arquivos.isEmpty()) {
+            Toast.makeText(context, "Pastas não podem ser compartilhadas", Toast.LENGTH_SHORT).show(); return
+        }
+        val uris = arquivos.map { uri(context, it.loc) }
+        val tipos = arquivos.map { Mime.of(it.name) }.distinct()
+        val tipo = if (tipos.size == 1) tipos[0] else tipos.map { it.substringBefore('/') }.distinct().singleOrNull()?.let { "$it/*" } ?: "*/*"
+        val i = if (uris.size == 1) Intent(Intent.ACTION_SEND).putExtra(Intent.EXTRA_STREAM, uris[0])
+            else Intent(Intent.ACTION_SEND_MULTIPLE).putParcelableArrayListExtra(Intent.EXTRA_STREAM, ArrayList(uris))
+        i.type = tipo
+        i.clipData = ClipData.newRawUri("", uris[0]).apply { uris.drop(1).forEach { addItem(ClipData.Item(it)) } }
+        i.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        context.startActivity(Intent.createChooser(i, "Compartilhar").addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+    }
+}
