@@ -151,10 +151,10 @@ object Vault {
     private fun b64(b: ByteArray) = Base64.encodeToString(b, Base64.NO_WRAP)
     private fun unb64(s: String) = Base64.decode(s, Base64.NO_WRAP)
 
-    private fun gravarMeta(pin: String, mestra: SecretKey) {
+    private fun gravarMeta(pin: String, mestra: SecretKey, tipo: Tipo) {
         val sal = ByteArray(16).also { VaultCrypto.random.nextBytes(it) }
         val (embrulho, iv) = gcm(Cipher.ENCRYPT_MODE, derivar(pin, sal), mestra.encoded, null)
-        val meta = JSONObject().put("v", 1).put("sal", b64(sal)).put("iter", ITER).put("iv", b64(iv))
+        val meta = JSONObject().put("v", 1).put("sal", b64(sal)).put("iter", ITER).put("iv", b64(iv)).put("tipo", tipo.name)
         val dev = chaveDoAparelho()
         if (dev != null) {
             val (externo, iv2) = gcm(Cipher.ENCRYPT_MODE, dev, embrulho, null)
@@ -166,10 +166,15 @@ object Vault {
         if (!tmp.renameTo(metaFile)) throw IOException("Falha ao gravar a pasta segura")
     }
 
-    @Synchronized fun setup(pin: String) {
+    /** PIN só com números (teclado numérico) ou senha com letras (teclado completo). */
+    enum class Tipo { Pin, Senha }
+
+    val tipo: Tipo get() = runCatching { Tipo.valueOf(JSONObject(metaFile.readText()).optString("tipo", "Pin")) }.getOrDefault(Tipo.Pin)
+
+    @Synchronized fun setup(pin: String, tipo: Tipo) {
         check(!isSetUp)
         val mestra = SecretKeySpec(ByteArray(32).also { VaultCrypto.random.nextBytes(it) }, "AES")
-        gravarMeta(pin, mestra)
+        gravarMeta(pin, mestra, tipo)
         master = mestra
         itens.clear(); salvarIndice()
         _unlocked.value = true
@@ -179,25 +184,61 @@ object Vault {
     private val prefs get() = App.instance.getSharedPreferences("cofre", Context.MODE_PRIVATE)
     fun esperaRestanteMs(): Long = maxOf(0, prefs.getLong("ate", 0) - System.currentTimeMillis())
 
-    sealed interface Resultado { data object Ok : Resultado; data object Errado : Resultado; data class Espere(val ms: Long) : Resultado }
+    sealed interface Resultado {
+        data object Ok : Resultado
+        data class Errado(val restantes: Int?) : Resultado
+        data class Espere(val ms: Long) : Resultado
+        /** Limite de tentativas atingido com "apagar após 10 erros" ligado. */
+        data object Apagada : Resultado
+    }
 
-    @Synchronized fun unlock(pin: String): Resultado {
-        esperaRestanteMs().takeIf { it > 0 }?.let { return Resultado.Espere(it) }
+    // ------------------------------------------------------------ configurações
+
+    /** Segundos fora do app até bloquear; 0 = ao sair do app. */
+    var autoBloqueio: Int
+        get() = prefs.getInt("auto", 60)
+        set(v) { prefs.edit().putInt("auto", v).apply(); versao.value++ }
+
+    /** Proteção contra roubo: 10 PINs errados seguidos apagam tudo. */
+    var apagarApos10: Boolean
+        get() = prefs.getBoolean("apagar10", false)
+        set(v) { prefs.edit().putBoolean("apagar10", v).apply(); versao.value++ }
+
+    /** Oculta o cartão do início e a opção "Mover para pasta segura" enquanto bloqueada. */
+    var visivel: Boolean
+        get() = prefs.getBoolean("visivel", true)
+        set(v) { prefs.edit().putBoolean("visivel", v).apply(); versao.value++ }
+
+    const val LIMITE_APAGAR = 10
+
+    /** Confere o PIN contando as tentativas — usado para abrir e para confirmar ações perigosas. */
+    @Synchronized private fun verificar(pin: String): Pair<Resultado, SecretKey?> {
+        esperaRestanteMs().takeIf { it > 0 }?.let { return Resultado.Espere(it) to null }
         val mestra = abrir(pin)
         if (mestra == null) {
             val erros = prefs.getInt("erros", 0) + 1
+            if (apagarApos10 && erros >= LIMITE_APAGAR) { erase(); return Resultado.Apagada to null }
             val ed = prefs.edit().putInt("erros", erros)
             if (erros >= 5) ed.putLong("ate", System.currentTimeMillis() + 30_000L * (1L shl minOf(erros - 5, 8)))
             ed.apply()
-            return Resultado.Errado
+            return Resultado.Errado(if (apagarApos10) LIMITE_APAGAR - erros else null) to null
         }
         prefs.edit().putInt("erros", 0).putLong("ate", 0).apply()
+        return Resultado.Ok to mestra
+    }
+
+    @Synchronized fun unlock(pin: String): Resultado {
+        val (r, mestra) = verificar(pin)
+        if (mestra == null) return r
         master = mestra
         carregarIndice()
         _unlocked.value = true
         versao.value++
         return Resultado.Ok
     }
+
+    /** Reconfirma o PIN antes de ação destrutiva, mesmo com a pasta aberta. */
+    fun confirmar(pin: String): Resultado = verificar(pin).first
 
     private fun abrir(pin: String): SecretKey? = runCatching {
         val meta = JSONObject(metaFile.readText())
@@ -208,10 +249,11 @@ object Vault {
         SecretKeySpec(bytes, "AES")
     }.getOrNull()
 
-    @Synchronized fun changePin(atual: String, novo: String): Boolean {
-        val mestra = abrir(atual) ?: return false
-        gravarMeta(novo, mestra)
-        return true
+    @Synchronized fun changePin(atual: String, novo: String, tipo: Tipo): Resultado {
+        val (r, mestra) = verificar(atual)
+        if (mestra == null) return r
+        gravarMeta(novo, mestra, tipo)
+        return Resultado.Ok
     }
 
     @Synchronized fun lock() {
@@ -225,6 +267,7 @@ object Vault {
         lock()
         dir.deleteRecursively()
         runCatching { KeyStore.getInstance("AndroidKeyStore").apply { load(null) }.deleteEntry(ALIAS) }
+        // Tudo volta ao padrão: uma pasta nova não herda nada da apagada.
         prefs.edit().clear().apply()
         versao.value++
     }

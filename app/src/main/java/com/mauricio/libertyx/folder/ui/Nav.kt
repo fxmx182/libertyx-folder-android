@@ -24,6 +24,7 @@ sealed class Screen {
     /** [dentro] nulo = busca no aparelho inteiro (índice do sistema); senão, varre a pasta e subpastas. */
     class Search(val termo: String, val dentro: Loc?) : Screen()
     class Network : Screen()
+    class Settings : Screen()
     class Pin(val modo: PinModo, val depois: (MainVm) -> Unit) : Screen()
 }
 

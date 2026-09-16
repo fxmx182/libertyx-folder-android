@@ -39,6 +39,7 @@ import androidx.compose.material.icons.filled.PhoneAndroid
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.SdCard
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Usb
 import androidx.compose.material.icons.filled.VideoLibrary
 import androidx.compose.material3.CircularProgressIndicator
@@ -94,6 +95,10 @@ fun HomeScreen(vm: MainVm, screen: Screen.Home) {
     var termo by remember { mutableStateOf("") }
     var servidorNovo by remember { mutableStateOf<ServerDraft?>(null) }
     var buscaTv by remember { mutableStateOf(false) }
+    val versaoCofre by com.mauricio.libertyx.folder.vault.Vault.versao.collectAsState()
+    val cofreAberto by com.mauricio.libertyx.folder.vault.Vault.unlocked.collectAsState()
+    // Oculta: some do início enquanto bloqueada; aberta, continua à mão.
+    val cofreVisivel = remember(versaoCofre, cofreAberto) { com.mauricio.libertyx.folder.vault.Vault.visivel || cofreAberto }
 
     LaunchedEffect(versao) {
         withContext(Dispatchers.IO) {
@@ -106,8 +111,14 @@ fun HomeScreen(vm: MainVm, screen: Screen.Home) {
 
     LazyColumn(Modifier.fillMaxSize(), state = screen.listState, contentPadding = PaddingValues(bottom = 110.dp)) {
         item {
-            Column(Modifier.statusBarsPadding().padding(horizontal = 24.dp).padding(top = 48.dp, bottom = 20.dp)) {
-                Text("LibertyX Folder", fontSize = 30.sp, fontWeight = FontWeight.Bold)
+            Row(
+                Modifier.statusBarsPadding().padding(start = 24.dp, end = 12.dp).padding(top = 48.dp, bottom = 20.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text("LibertyX Folder", fontSize = 30.sp, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
+                IconButton(modifier = Modifier.tvFocus(24.dp), onClick = { vm.push(Screen.Settings()) }) {
+                    Icon(Icons.Filled.Settings, "Configurações")
+                }
             }
         }
         item {
@@ -202,14 +213,15 @@ fun HomeScreen(vm: MainVm, screen: Screen.Home) {
             }
         }
 
-        item {
+        // Oculta nas configurações: some do início (continua em Configurações).
+        if (cofreVisivel) item {
             val aberto by com.mauricio.libertyx.folder.vault.Vault.unlocked.collectAsState()
             val vv by com.mauricio.libertyx.folder.vault.Vault.versao.collectAsState()
             Card(Modifier.padding(start = 16.dp, end = 16.dp, top = 12.dp)) {
                 val sub = remember(aberto, vv) {
                     when {
                         !com.mauricio.libertyx.folder.vault.Vault.isSetUp -> "Guarde arquivos cifrados, protegidos por PIN"
-                        aberto -> "Desbloqueada · ${com.mauricio.libertyx.folder.vault.Vault.snapshot().count { !it.isDir }} arquivos"
+                        aberto -> com.mauricio.libertyx.folder.vault.Vault.snapshot().count { !it.isDir }.let { "Desbloqueada · $it arquivo${if (it == 1) "" else "s"}" }
                         else -> "Bloqueada"
                     }
                 }

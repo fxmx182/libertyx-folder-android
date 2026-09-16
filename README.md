@@ -18,7 +18,9 @@ Fire TV sem a tela de "acesso a todos os arquivos": o app pede acesso às mídia
 
 ## Pasta segura
 
-PIN → PBKDF2-HMAC-SHA256 (150 mil iterações) → chave que embrulha uma chave mestra aleatória, embrulhada de novo por chave do Android Keystore. Arquivos em AES-256-GCM em blocos de 1 MiB (`VaultCrypto`, com detecção de alteração e de corte), nomes e pastas num índice cifrado, tudo na área privada do app. Espera crescente após 5 PINs errados; bloqueio automático após 1 min fora do app. Esqueceu o PIN = apagar a pasta (não há recuperação, por projeto).
+PIN numérico ou senha com letras, digitado no teclado do sistema → PBKDF2-HMAC-SHA256 (150 mil iterações) → chave que embrulha uma chave mestra aleatória, embrulhada de novo por chave do Android Keystore. Arquivos em AES-256-GCM em blocos de 1 MiB (`VaultCrypto`, com detecção de alteração e de corte), nomes e pastas num índice cifrado, tudo na área privada do app.
+
+**Configurações** (engrenagem no início): abrir, bloquear agora, alterar PIN/senha (confere o atual primeiro; permite trocar de PIN para senha), mostrar/ocultar no início (oculta: some do início e da opção "Mover para pasta segura" enquanto bloqueada; mudar exige o PIN), bloqueio automático (ao sair, 1, 5 ou 30 min), **apagar após 10 tentativas erradas** e **excluir pasta segura** (reconfirma o PIN). Espera crescente após 5 erros. Excluir ou esquecer o PIN apaga tudo e volta as opções ao padrão — não há recuperação, por projeto.
 
 ## Compilar
 

@@ -228,7 +228,7 @@ fun ListingScreen(vm: MainVm, screen: Screen) {
                                         menu = false; com.mauricio.libertyx.folder.smb.SmbFs.forget(pasta.serverId); recarga++
                                     })
                                     if (pasta is Loc.Vault) {
-                                        DropdownMenuItem({ Text("Trocar PIN") }, { menu = false; vm.push(Screen.Pin(PinModo.Trocar) {}) })
+                                        DropdownMenuItem({ Text("Configurações da pasta segura") }, { menu = false; vm.push(Screen.Settings()) })
                                         DropdownMenuItem({ Text("Bloquear pasta segura") }, {
                                             menu = false; com.mauricio.libertyx.folder.vault.Vault.lock(); vm.esquecerCofre()
                                         })
@@ -412,6 +412,8 @@ private fun SelectionBar(
                 DropdownMenu(menuAberto, { setMenu(false) }) {
                     DropdownMenuItem({ Text("Renomear") }, { setMenu(false); onRenomear() }, enabled = itens.size == 1 && !temShare)
                     DropdownMenuItem({ Text("Abrir com") }, { setMenu(false); onAbrirCom() }, enabled = itens.size == 1 && !itens[0].isDir)
+                    // Pasta oculta e bloqueada: a opção nem aparece, para não denunciar que ela existe.
+                    if (noCofre || com.mauricio.libertyx.folder.vault.Vault.visivel || com.mauricio.libertyx.folder.vault.Vault.unlocked.value)
                     DropdownMenuItem({ Text(if (noCofre) "Retirar da pasta segura" else "Mover para pasta segura") },
                         { setMenu(false); onCofre() }, enabled = noCofre || (!temShare && itens.none { it.loc is Loc.Vault }))
                     DropdownMenuItem({ Text("Detalhes") }, { setMenu(false); onDetalhes() })

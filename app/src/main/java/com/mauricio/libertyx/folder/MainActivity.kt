@@ -94,6 +94,7 @@ class MainActivity : ComponentActivity() {
                                     }
                                 }
                                 is Screen.Network -> NetworkScreen(vm, s)
+                                is Screen.Settings -> com.mauricio.libertyx.folder.ui.SettingsScreen(vm, s)
                                 is Screen.Pin -> com.mauricio.libertyx.folder.ui.PinScreen(vm, s)
                                 else -> ListingScreen(vm, s)
                             }
@@ -114,13 +115,19 @@ class MainActivity : ComponentActivity() {
     override fun onStop() {
         super.onStop()
         saiuEm = System.currentTimeMillis()
+        // "Ao sair do app": bloqueia já (exceto no meio de uma cópia para a pasta).
+        if (!isChangingConfigurations && com.mauricio.libertyx.folder.vault.Vault.autoBloqueio == 0 &&
+            !com.mauricio.libertyx.folder.ops.Ops.ocupado) {
+            com.mauricio.libertyx.folder.vault.Vault.lock()
+            vm.esquecerCofre()
+        }
     }
 
     override fun onStart() {
         super.onStart()
         // Um minuto fora do app bloqueia a pasta segura. Não na hora: abrir uma
         // foto dela em outro app também tira este da frente.
-        if (saiuEm > 0 && System.currentTimeMillis() - saiuEm > 60_000 && !com.mauricio.libertyx.folder.ops.Ops.ocupado) {
+        if (saiuEm > 0 && System.currentTimeMillis() - saiuEm > com.mauricio.libertyx.folder.vault.Vault.autoBloqueio * 1000L && !com.mauricio.libertyx.folder.ops.Ops.ocupado) {
             com.mauricio.libertyx.folder.vault.Vault.lock()
             vm.esquecerCofre()
         }
