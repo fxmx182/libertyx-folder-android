@@ -14,5 +14,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "Arquivos"
+rootProject.name = "LibertyXFolder"
 include(":app")

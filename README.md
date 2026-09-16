@@ -1,4 +1,4 @@
-# Arquivos
+# LibertyX Folder
 
 Gerenciador de arquivos para Android no estilo do "Meus Arquivos" da Samsung, com SMB de primeira classe e pasta segura.
 
@@ -16,7 +16,7 @@ PIN → PBKDF2-HMAC-SHA256 (150 mil iterações) → chave que embrulha uma chav
 
 ```bash
 export JAVA_HOME=/DATA/Claudinho/toolchain/jdk-17.0.20.1+1
-./gradlew testDebugUnitTest assembleRelease   # APK em dist/Arquivos.apk
+./gradlew testDebugUnitTest assembleRelease   # APK em dist/LibertyXFolder.apk
 ```
 
 ## Armadilhas já pagas

@@ -5,11 +5,11 @@ plugins {
 }
 
 android {
-    namespace = "com.mauricio.arquivos"
+    namespace = "com.mauricio.libertyx.folder"
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.mauricio.arquivos"
+        applicationId = "com.mauricio.libertyx.folder"
         // 26 é onde nasce o `openProxyFileDescriptor`: é ele que deixa outro
         // app (player, visualizador de PDF) ler um arquivo do SMB aos pedaços,
         // com busca, sem baixar tudo antes.
@@ -70,7 +70,7 @@ android {
 val publicarApk = tasks.register<Copy>("publicarApk") {
     from(layout.buildDirectory.dir("outputs/apk/release")) {
         include("*-release.apk")
-        rename { "Arquivos.apk" }
+        rename { "LibertyXFolder.apk" }
     }
     into(rootProject.layout.projectDirectory.dir("dist"))
     outputs.upToDateWhen { false }
