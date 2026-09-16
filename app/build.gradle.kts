@@ -22,6 +22,16 @@ android {
         versionName = "0.1.0"
     }
 
+    // Dois APKs do mesmo código, como no LibertyX Player: o de TV exige
+    // `leanback` (não instala em celular) e aparece na tela inicial da TV; o de
+    // celular não aparece na TV. O app não tem biblioteca nativa, então os dois
+    // servem para qualquer arquitetura — ARM 32/64 do Fire Stick incluídos.
+    flavorDimensions += "aparelho"
+    productFlavors {
+        create("celular") { dimension = "aparelho" }
+        create("tv") { dimension = "aparelho" }
+    }
+
     signingConfigs {
         create("arquivos") {
             storeFile = rootProject.file("keystore/arquivos.jks")
@@ -68,12 +78,12 @@ android {
 }
 
 val publicarApk = tasks.register<Copy>("publicarApk") {
-    from(layout.buildDirectory.dir("outputs/apk/release")) {
-        include("*-release.apk")
-        rename { "LibertyXFolder.apk" }
-    }
+    val saida = layout.buildDirectory.dir("outputs/apk")
+    from(saida.map { it.dir("celular/release") }) { include("*-release.apk"); rename { "LibertyXFolder-Celular.apk" } }
+    from(saida.map { it.dir("tv/release") }) { include("*-release.apk"); rename { "LibertyXFolder-TV.apk" } }
     into(rootProject.layout.projectDirectory.dir("dist"))
     outputs.upToDateWhen { false }
+    doFirst { rootProject.layout.projectDirectory.dir("dist").asFile.listFiles { f -> f.name.endsWith(".apk") }?.forEach { it.delete() } }
 }
 
 tasks.whenTaskAdded {

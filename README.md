@@ -8,6 +8,14 @@ Gerenciador de arquivos para Android no estilo do "Meus Arquivos" da Samsung, co
 - **SMB (smbj + dcerpc):** busca automática (mDNS + varredura da porta 445 + nome NetBIOS), lista de compartilhamentos, usuário/senha ou convidado, ler/gravar/renomear/mover/excluir, miniaturas, arquivos abertos em outros apps **sem baixar antes** (`SmbProvider`, `openProxyFileDescriptor`, com busca/seek).
 - **Operações** em serviço de primeiro plano com progresso e cancelamento; nunca sobrescreve ("nome (1).ext").
 
+## TV (Google TV e Fire Stick)
+
+Mesmo código, dois APKs (`productFlavors`): `dist/LibertyXFolder-Celular.apk` e `dist/LibertyXFolder-TV.apk`. O de TV declara `leanback` obrigatório, banner e `LEANBACK_LAUNCHER`. Sem biblioteca nativa, então serve a ARM 32/64 (Fire Stick) e x86. Os dois têm o mesmo pacote: um substitui o outro. O `leanback` obrigatório só filtra na loja; `adb install` instala qualquer um em qualquer aparelho.
+
+No controle remoto: realce de foco forte (`Tv.kt`), setas trocam de campo nos formulários, busca abre diálogo em vez de campo (focar campo abre o teclado), PIN aceita os números do controle e fica lado a lado com o teclado numérico, margem de segurança de 48 dp, sem "puxar para atualizar" (use Mais → Atualizar). Toque longo no botão central seleciona.
+
+Fire TV sem a tela de "acesso a todos os arquivos": o app pede acesso às mídias e mostra o comando `adb shell appops set com.mauricio.libertyx.folder MANAGE_EXTERNAL_STORAGE allow`. SMB funciona sem permissão nenhuma ("Só usar servidores de rede").
+
 ## Pasta segura
 
 PIN → PBKDF2-HMAC-SHA256 (150 mil iterações) → chave que embrulha uma chave mestra aleatória, embrulhada de novo por chave do Android Keystore. Arquivos em AES-256-GCM em blocos de 1 MiB (`VaultCrypto`, com detecção de alteração e de corte), nomes e pastas num índice cifrado, tudo na área privada do app. Espera crescente após 5 PINs errados; bloqueio automático após 1 min fora do app. Esqueceu o PIN = apagar a pasta (não há recuperação, por projeto).
@@ -16,7 +24,7 @@ PIN → PBKDF2-HMAC-SHA256 (150 mil iterações) → chave que embrulha uma chav
 
 ```bash
 export JAVA_HOME=/DATA/Claudinho/toolchain/jdk-17.0.20.1+1
-./gradlew testDebugUnitTest assembleRelease   # APK em dist/LibertyXFolder.apk
+./gradlew testCelularDebugUnitTest assembleRelease   # APKs em dist/
 ```
 
 ## Armadilhas já pagas

@@ -180,7 +180,7 @@ fun ListingScreen(vm: MainVm, screen: Screen) {
                 TopAppBar(
                     colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background),
                     navigationIcon = {
-                        IconButton(onClick = {
+                        IconButton(modifier = Modifier.tvFocus(24.dp), onClick = {
                             when { selecionando -> sel.clear(); filtrando -> { filtrando = false; filtro = "" }; else -> vm.pop() }
                         }) { Icon(if (selecionando) Icons.Filled.Close else Icons.AutoMirrored.Filled.ArrowBack, "Voltar") }
                     },
@@ -204,20 +204,20 @@ fun ListingScreen(vm: MainVm, screen: Screen) {
                     },
                     actions = {
                         if (selecionando) {
-                            TextButton(onClick = {
+                            TextButton(modifier = Modifier.tvFocus(24.dp), onClick = {
                                 if (sel.size == mostrados.size) sel.clear() else mostrados.forEach { sel[it.loc] = it }
                             }) { Text(if (sel.size == mostrados.size) "Nenhum" else "Tudo") }
                         } else if (filtrando) {
-                            if (pasta != null && filtro.isNotBlank()) IconButton(onClick = {
+                            if (pasta != null && filtro.isNotBlank()) IconButton(modifier = Modifier.tvFocus(24.dp), onClick = {
                                 vm.push(Screen.Search(filtro.trim(), pasta)); filtrando = false; filtro = ""
                             }) { Icon(Icons.Filled.SubdirectoryArrowRight, "Pesquisar nas subpastas") }
                         } else {
-                            if (screen !is Screen.Search) IconButton(onClick = { filtrando = true }) { Icon(Icons.Filled.Search, "Pesquisar") }
-                            IconButton(onClick = { Prefs.grid = !Prefs.grid }) {
+                            if (screen !is Screen.Search) IconButton(modifier = Modifier.tvFocus(24.dp), onClick = { filtrando = true }) { Icon(Icons.Filled.Search, "Pesquisar") }
+                            IconButton(modifier = Modifier.tvFocus(24.dp), onClick = { Prefs.grid = !Prefs.grid }) {
                                 Icon(if (Prefs.grid) Icons.Filled.ViewList else Icons.Filled.GridView, "Visualização")
                             }
                             Box {
-                                IconButton(onClick = { menu = true }) { Icon(Icons.Filled.MoreVert, "Mais") }
+                                IconButton(modifier = Modifier.tvFocus(24.dp), onClick = { menu = true }) { Icon(Icons.Filled.MoreVert, "Mais") }
                                 DropdownMenu(menu, { menu = false }) {
                                     val podeCriar = pasta != null && !(pasta is Loc.Smb && pasta.isServerRoot)
                                     if (podeCriar) DropdownMenuItem({ Text("Nova pasta") }, { menu = false; dialogo = "nova" })
@@ -276,10 +276,8 @@ fun ListingScreen(vm: MainVm, screen: Screen) {
             }
         },
     ) { pad ->
-        PullToRefreshBox(
-            isRefreshing = carregando && itens != null, onRefresh = { recarga++ },
-            modifier = Modifier.fillMaxSize().padding(pad),
-        ) {
+        // Na TV não há gesto de puxar, e o indicador aparecia sozinho ao rolar pelo controle.
+        val corpo: @Composable () -> Unit = {
             when {
                 itens == null && carregando -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -295,7 +293,7 @@ fun ListingScreen(vm: MainVm, screen: Screen) {
                         else -> Icons.Filled.FolderOff
                     })
                     Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-                        TextButton(onClick = { (pasta as? Loc.Smb)?.let { com.mauricio.libertyx.folder.smb.SmbFs.forget(it.serverId) }; recarga++ }) { Text("Tentar de novo") }
+                        TextButton(modifier = Modifier.tvFocus(24.dp), onClick = { (pasta as? Loc.Smb)?.let { com.mauricio.libertyx.folder.smb.SmbFs.forget(it.serverId) }; recarga++ }) { Text("Tentar de novo") }
                     }
                 } }
                 mostrados.isEmpty() && !carregando -> LazyColumn(Modifier.fillMaxSize()) { item {
@@ -323,6 +321,11 @@ fun ListingScreen(vm: MainVm, screen: Screen) {
                 }
             }
         }
+        if (Device.isTv) Box(Modifier.fillMaxSize().padding(pad)) { corpo() }
+        else PullToRefreshBox(
+            isRefreshing = carregando && itens != null, onRefresh = { recarga++ },
+            modifier = Modifier.fillMaxSize().padding(pad),
+        ) { corpo() }
     }
 
     val alvo = sel.values.toList()
@@ -371,7 +374,7 @@ private fun Breadcrumbs(vm: MainVm, loc: Loc, nomeServidor: String?) {
                 nome, fontSize = 13.sp, maxLines = 1,
                 color = if (ultimo) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
                 fontWeight = if (ultimo) FontWeight.SemiBold else FontWeight.Normal,
-                modifier = Modifier.clickable(enabled = !ultimo) { vm.jump(l) }.padding(horizontal = 6.dp, vertical = 6.dp),
+                modifier = Modifier.tvFocus(10.dp).clickable(enabled = !ultimo) { vm.jump(l) }.padding(horizontal = 6.dp, vertical = 6.dp),
             )
             if (!ultimo) Icon(Icons.Filled.ChevronRight, null, Modifier.size(16.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
         }
@@ -381,7 +384,7 @@ private fun Breadcrumbs(vm: MainVm, loc: Loc, nomeServidor: String?) {
 @Composable
 private fun BarAction(icon: ImageVector, label: String, enabled: Boolean = true, onClick: () -> Unit) {
     Column(
-        Modifier.clickable(enabled = enabled, onClick = onClick).padding(horizontal = 10.dp, vertical = 8.dp),
+        Modifier.tvFocus(14.dp).clickable(enabled = enabled, onClick = onClick).padding(horizontal = 10.dp, vertical = 8.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         val cor = if (enabled) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.35f)
@@ -428,9 +431,9 @@ fun PasteBar(clip: Clip, habilitado: Boolean, onCancelar: () -> Unit, onColar: (
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             Row(Modifier.fillMaxWidth().padding(8.dp), horizontalArrangement = Arrangement.SpaceEvenly) {
-                TextButton(onClick = onCancelar, Modifier.weight(1f)) { Text("Cancelar") }
+                TextButton(onClick = onCancelar, Modifier.weight(1f).tvFocus(24.dp)) { Text("Cancelar") }
                 HorizontalDivider(Modifier.height(24.dp).size(1.dp, 24.dp).align(Alignment.CenterVertically))
-                TextButton(onClick = { onColar?.invoke() }, Modifier.weight(1f), enabled = habilitado && onColar != null) {
+                TextButton(onClick = { onColar?.invoke() }, Modifier.weight(1f).tvFocus(24.dp), enabled = habilitado && onColar != null) {
                     Text(if (clip.mover) "Mover para cá" else "Copiar para cá", fontWeight = FontWeight.SemiBold)
                 }
             }

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Variante de TV: `leanback` obrigatório a torna exclusiva. As duas categorias
+     porque o Google TV lista LEANBACK_LAUNCHER e o Fire TV, conforme a geração,
+     procura uma ou outra. -->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <uses-feature android:name="android.software.leanback" android:required="true" />
+    <application android:banner="@drawable/tv_banner">
+        <activity android:name=".MainActivity" android:screenOrientation="landscape">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LEANBACK_LAUNCHER" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+    </application>
+</manifest>

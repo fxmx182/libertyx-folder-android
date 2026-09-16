@@ -93,6 +93,7 @@ fun HomeScreen(vm: MainVm, screen: Screen.Home) {
     val buscando by Descobertas.buscando.collectAsState()
     var termo by remember { mutableStateOf("") }
     var servidorNovo by remember { mutableStateOf<ServerDraft?>(null) }
+    var buscaTv by remember { mutableStateOf(false) }
 
     LaunchedEffect(versao) {
         withContext(Dispatchers.IO) {
@@ -114,7 +115,13 @@ fun HomeScreen(vm: MainVm, screen: Screen.Home) {
                 Modifier.padding(horizontal = 16.dp).fillMaxWidth(), shape = RoundedCornerShape(28.dp),
                 color = MaterialTheme.colorScheme.surfaceContainer,
             ) {
-                TextField(
+                if (Device.isTv) Row(
+                    Modifier.fillMaxWidth().tvFocus(28.dp).clickable { buscaTv = true }.padding(horizontal = 16.dp, vertical = 16.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Icon(Icons.Filled.Search, null)
+                    Text("Pesquisar no aparelho", Modifier.padding(start = 12.dp), color = MaterialTheme.colorScheme.onSurfaceVariant)
+                } else TextField(
                     termo, { termo = it }, singleLine = true,
                     placeholder = { Text("Pesquisar no aparelho") },
                     leadingIcon = { Icon(Icons.Filled.Search, null) },
@@ -134,7 +141,7 @@ fun HomeScreen(vm: MainVm, screen: Screen.Home) {
             item {
                 LazyRow(contentPadding = PaddingValues(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                     items(recentes, key = { it.loc.toString() }) { e ->
-                        Column(Modifier.width(96.dp).clip(RoundedCornerShape(14.dp)).clickable { Open.open(ctx, e) }) {
+                        Column(Modifier.width(96.dp).tvFocus(14.dp, 1.06f).clip(RoundedCornerShape(14.dp)).clickable { Open.open(ctx, e) }) {
                             Thumb(e, 96.dp, corner = 14.dp)
                             Text(e.name, fontSize = 12.sp, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(top = 4.dp, start = 2.dp))
                         }
@@ -176,7 +183,7 @@ fun HomeScreen(vm: MainVm, screen: Screen.Home) {
             Card(Modifier.padding(horizontal = 16.dp)) {
                 volumes.forEach { v ->
                     Row(
-                        Modifier.fillMaxWidth().clickable { vm.push(Screen.Folder(v.loc)) }.padding(horizontal = 20.dp, vertical = 12.dp),
+                        Modifier.fillMaxWidth().tvFocus(24.dp).clickable { vm.push(Screen.Folder(v.loc)) }.padding(horizontal = 20.dp, vertical = 12.dp),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         RowIcon(
@@ -214,7 +221,7 @@ fun HomeScreen(vm: MainVm, screen: Screen.Home) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 SectionTitle("Rede", Modifier.weight(1f))
                 if (buscando) CircularProgressIndicator(Modifier.padding(top = 12.dp, end = 12.dp).size(16.dp), strokeWidth = 2.dp)
-                else IconButton(onClick = { scope.launch { Descobertas.buscar(ctx.applicationContext) } }, Modifier.padding(top = 12.dp)) {
+                else IconButton(onClick = { scope.launch { Descobertas.buscar(ctx.applicationContext) } }, Modifier.padding(top = 12.dp).tvFocus(24.dp)) {
                     Icon(Icons.Filled.Refresh, "Buscar de novo", tint = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
@@ -243,6 +250,9 @@ fun HomeScreen(vm: MainVm, screen: Screen.Home) {
         }
     }
 
+    if (buscaTv) NameDialog("Pesquisar no aparelho", "", "Pesquisar", { buscaTv = false }) { t ->
+        buscaTv = false; vm.push(Screen.Search(t, null))
+    }
     servidorNovo?.let { d ->
         ServerDialog(d, onDismiss = { servidorNovo = null }) { s -> servidorNovo = null; vm.push(Screen.Folder(Loc.Smb(s.id))) }
     }
@@ -251,7 +261,7 @@ fun HomeScreen(vm: MainVm, screen: Screen.Home) {
 @Composable
 private fun CategoryTile(nome: String, icone: ImageVector, cor: Color, modifier: Modifier, onClick: () -> Unit) {
     Column(
-        modifier.clip(RoundedCornerShape(16.dp)).clickable(onClick = onClick).padding(vertical = 12.dp),
+        modifier.tvFocus(16.dp, 1.05f).clip(RoundedCornerShape(16.dp)).clickable(onClick = onClick).padding(vertical = 12.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Box(Modifier.size(48.dp).clip(CircleShape).background(cor.copy(alpha = 0.15f)), contentAlignment = Alignment.Center) {
@@ -264,7 +274,7 @@ private fun CategoryTile(nome: String, icone: ImageVector, cor: Color, modifier:
 @Composable
 fun NetRow(icon: ImageVector, titulo: String, sub: String, destaque: Boolean = false, onClick: () -> Unit) {
     Row(
-        Modifier.fillMaxWidth().clickable(onClick = onClick).padding(horizontal = 20.dp, vertical = 12.dp),
+        Modifier.fillMaxWidth().tvFocus(24.dp).clickable(onClick = onClick).padding(horizontal = 20.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         RowIcon(icon, if (destaque) Color(0xFF16B3A5) else Color(0xFF0A6CFF))

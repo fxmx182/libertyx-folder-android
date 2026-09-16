@@ -49,8 +49,8 @@ fun NameDialog(titulo: String, inicial: String, confirmar: String, onDismiss: ()
                 keyboardActions = KeyboardActions(onDone = { if (!invalido) onOk(v.text.trim()) }),
             )
         },
-        confirmButton = { TextButton(onClick = { onOk(v.text.trim()) }, enabled = !invalido) { Text(confirmar) } },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancelar") } },
+        confirmButton = { TextButton(modifier = Modifier.tvFocus(24.dp), onClick = { onOk(v.text.trim()) }, enabled = !invalido) { Text(confirmar) } },
+        dismissButton = { TextButton(modifier = Modifier.tvFocus(24.dp), onClick = onDismiss) { Text("Cancelar") } },
     )
     LaunchedEffect(Unit) { foco.requestFocus() }
 }
@@ -59,8 +59,8 @@ fun NameDialog(titulo: String, inicial: String, confirmar: String, onDismiss: ()
 fun ConfirmDialog(titulo: String, texto: String, confirmar: String, onDismiss: () -> Unit, onOk: () -> Unit) {
     AlertDialog(
         onDismissRequest = onDismiss, title = { Text(titulo) }, text = { Text(texto) },
-        confirmButton = { TextButton(onClick = onOk) { Text(confirmar, color = MaterialTheme.colorScheme.error) } },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancelar") } },
+        confirmButton = { TextButton(modifier = Modifier.tvFocus(24.dp), onClick = onOk) { Text(confirmar, color = MaterialTheme.colorScheme.error) } },
+        dismissButton = { TextButton(modifier = Modifier.tvFocus(24.dp), onClick = onDismiss) { Text("Cancelar") } },
     )
 }
 
@@ -70,10 +70,10 @@ fun SortDialog(onDismiss: () -> Unit) {
         onDismissRequest = onDismiss,
         title = { Text("Ordenar por") },
         text = {
-            Column {
+            Column(Modifier.setasTrocamDeCampo()) {
                 Sort.entries.forEach { s ->
-                    Row(Modifier.fillMaxWidth().clickable { Prefs.sort = s }, verticalAlignment = Alignment.CenterVertically) {
-                        RadioButton(Prefs.sort == s, { Prefs.sort = s }); Text(s.titulo)
+                    Row(Modifier.fillMaxWidth().tvFocus(12.dp).clickable { Prefs.sort = s }, verticalAlignment = Alignment.CenterVertically) {
+                        RadioButton(Prefs.sort == s, null); Text(s.titulo)
                     }
                 }
                 Row(Modifier.fillMaxWidth().padding(top = 8.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -84,7 +84,7 @@ fun SortDialog(onDismiss: () -> Unit) {
                 }
             }
         },
-        confirmButton = { TextButton(onClick = onDismiss) { Text("OK") } },
+        confirmButton = { TextButton(modifier = Modifier.tvFocus(24.dp), onClick = onDismiss) { Text("OK") } },
     )
 }
 
@@ -122,7 +122,7 @@ fun DetailsDialog(itens: List<FileEntry>, onDismiss: () -> Unit) {
                 }
             }
         },
-        confirmButton = { TextButton(onClick = onDismiss) { Text("OK") } },
+        confirmButton = { TextButton(modifier = Modifier.tvFocus(24.dp), onClick = onDismiss) { Text("OK") } },
     )
 }
 

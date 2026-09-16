@@ -36,6 +36,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.onPreviewKeyEvent
+import androidx.compose.ui.input.key.type
+import androidx.compose.ui.input.key.utf16CodePoint
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -118,58 +125,87 @@ fun PinScreen(vm: MainVm, screen: Screen.Pin) {
         else -> "Pasta segura"
     }
 
-    Column(Modifier.fillMaxSize().statusBarsPadding().navigationBarsPadding(), horizontalAlignment = Alignment.CenterHorizontally) {
+    // Teclas numéricas do controle remoto ou de um teclado também digitam.
+    val focoInicial = remember { androidx.compose.ui.focus.FocusRequester() }
+    Column(
+        Modifier.fillMaxSize().statusBarsPadding().navigationBarsPadding()
+            .onPreviewKeyEvent { ev ->
+                if (ev.type != KeyEventType.KeyDown || ocupado || espera > 0) return@onPreviewKeyEvent false
+                val c = ev.utf16CodePoint.toChar()
+                when {
+                    c in '0'..'9' -> { if (pin.length < 12) { pin += c; erro = null }; true }
+                    ev.key == Key.Backspace || ev.key == Key.Delete -> { pin = pin.dropLast(1); true }
+                    ev.key == Key.Enter || ev.key == Key.NumPadEnter -> { confirmar(); true }
+                    else -> false
+                }
+            },
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
         Row(Modifier.fillMaxWidth()) {
-            IconButton(onClick = { vm.pop() }) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Voltar") }
+            IconButton(modifier = Modifier.tvFocus(24.dp), onClick = { vm.pop() }) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Voltar") }
         }
-        Spacer(Modifier.weight(0.6f))
-        Icon(Icons.Filled.Lock, null, Modifier.size(52.dp), tint = MaterialTheme.colorScheme.primary)
-        Text(titulo, fontSize = 22.sp, fontWeight = FontWeight.SemiBold, textAlign = TextAlign.Center, modifier = Modifier.padding(top = 16.dp, start = 24.dp, end = 24.dp))
-        val sub = when {
-            espera > 0 -> "Muitas tentativas. Tente de novo em ${(espera + 999) / 1000} s"
-            erro != null -> erro!!
-            screen.modo == PinModo.Criar && etapa == "novo" -> "De 4 a 12 dígitos. Os arquivos são cifrados com AES-256; sem o PIN não há como recuperá-los."
-            else -> ""
-        }
-        Text(sub, color = if (erro != null || espera > 0) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant,
-            textAlign = TextAlign.Center, fontSize = 14.sp, modifier = Modifier.padding(horizontal = 32.dp, vertical = 10.dp).height(44.dp))
-        Row(Modifier.height(24.dp), horizontalArrangement = Arrangement.spacedBy(14.dp), verticalAlignment = Alignment.CenterVertically) {
-            if (ocupado) CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp)
-            else repeat(maxOf(pin.length, 4)) { i ->
-                Box(Modifier.size(14.dp).clip(CircleShape).background(
-                    if (i < pin.length) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceContainerHighest))
+        val cabecalho: @Composable () -> Unit = {
+            Icon(Icons.Filled.Lock, null, Modifier.size(52.dp), tint = MaterialTheme.colorScheme.primary)
+            Text(titulo, fontSize = 22.sp, fontWeight = FontWeight.SemiBold, textAlign = TextAlign.Center, modifier = Modifier.padding(top = 16.dp, start = 24.dp, end = 24.dp))
+            val sub = when {
+                espera > 0 -> "Muitas tentativas. Tente de novo em ${(espera + 999) / 1000} s"
+                erro != null -> erro!!
+                screen.modo == PinModo.Criar && etapa == "novo" -> "De 4 a 12 dígitos. Os arquivos são cifrados com AES-256; sem o PIN não há como recuperá-los."
+                else -> ""
+            }
+            Text(sub, color = if (erro != null || espera > 0) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center, fontSize = 14.sp, modifier = Modifier.padding(horizontal = 32.dp, vertical = 10.dp).height(44.dp))
+            Row(Modifier.height(24.dp), horizontalArrangement = Arrangement.spacedBy(14.dp), verticalAlignment = Alignment.CenterVertically) {
+                if (ocupado) CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp)
+                else repeat(maxOf(pin.length, 4)) { i ->
+                    Box(Modifier.size(14.dp).clip(CircleShape).background(
+                        if (i < pin.length) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceContainerHighest))
+                }
             }
         }
-        Spacer(Modifier.weight(1f))
-        val bloqueado = ocupado || espera > 0
-        val teclas = listOf("1", "2", "3", "4", "5", "6", "7", "8", "9", "⌫", "0", "OK")
-        teclas.chunked(3).forEach { linha ->
-            Row(Modifier.fillMaxWidth().padding(horizontal = 40.dp), horizontalArrangement = Arrangement.SpaceEvenly) {
-                linha.forEach { t ->
-                    Box(
-                        Modifier.size(84.dp).clip(CircleShape).clickable(enabled = !bloqueado) {
+        val teclado: @Composable () -> Unit = {
+            val bloqueado = ocupado || espera > 0
+            val teclas = listOf("1", "2", "3", "4", "5", "6", "7", "8", "9", "⌫", "0", "OK")
+            teclas.chunked(3).forEach { linha ->
+                Row(Modifier.fillMaxWidth().padding(horizontal = if (Device.isTv) 60.dp else 40.dp), horizontalArrangement = Arrangement.SpaceEvenly) {
+                    linha.forEach { t ->
+                        Box(
+                            Modifier.size(if (Device.isTv) 64.dp else 84.dp).then(if (t == "5") Modifier.focusRequester(focoInicial) else Modifier).tvFocus(42.dp, 1.08f).clip(CircleShape).clickable(enabled = !bloqueado) {
+                                when (t) {
+                                    "⌫" -> pin = pin.dropLast(1)
+                                    "OK" -> confirmar()
+                                    else -> if (pin.length < 12) { pin += t; erro = null }
+                                }
+                            },
+                            contentAlignment = Alignment.Center,
+                        ) {
                             when (t) {
-                                "⌫" -> pin = pin.dropLast(1)
-                                "OK" -> confirmar()
-                                else -> if (pin.length < 12) { pin += t; erro = null }
+                                "⌫" -> Icon(Icons.AutoMirrored.Filled.Backspace, "Apagar")
+                                "OK" -> Text("OK", fontSize = 20.sp, fontWeight = FontWeight.SemiBold,
+                                    color = if (pin.length >= 4) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant)
+                                else -> Text(t, fontSize = 30.sp)
                             }
-                        },
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        when (t) {
-                            "⌫" -> Icon(Icons.AutoMirrored.Filled.Backspace, "Apagar")
-                            "OK" -> Text("OK", fontSize = 20.sp, fontWeight = FontWeight.SemiBold,
-                                color = if (pin.length >= 4) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant)
-                            else -> Text(t, fontSize = 30.sp)
                         }
                     }
                 }
             }
+            if (screen.modo == PinModo.Desbloquear) TextButton(onClick = { apagar = true }, Modifier.tvFocus(24.dp)) { Text("Esqueci o PIN") }
+            else Spacer(Modifier.height(48.dp))
         }
-        if (screen.modo == PinModo.Desbloquear) TextButton(onClick = { apagar = true }) { Text("Esqueci o PIN") }
-        else Spacer(Modifier.height(48.dp))
-        Spacer(Modifier.height(12.dp))
+        // Na TV a tela é baixa demais para empilhar tudo: título à esquerda, teclado à direita.
+        if (Device.isTv) Row(Modifier.fillMaxSize(), verticalAlignment = Alignment.CenterVertically) {
+            Column(Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) { cabecalho() }
+            Column(Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) { teclado() }
+        } else {
+            Spacer(Modifier.weight(0.6f))
+            cabecalho()
+            Spacer(Modifier.weight(1f))
+            teclado()
+            Spacer(Modifier.height(12.dp))
+        }
     }
+
+    if (Device.isTv) LaunchedEffect(Unit) { runCatching { focoInicial.requestFocus() } }
 
     if (apagar) ConfirmDialog(
         "Apagar a pasta segura?",

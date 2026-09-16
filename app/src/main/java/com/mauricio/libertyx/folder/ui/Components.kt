@@ -108,6 +108,7 @@ fun FileRow(
 ) {
     Row(
         Modifier.fillMaxWidth()
+            .tvFocus(radius = 0.dp)
             .combinedClickable(onClick = onClick, onLongClick = onLongClick)
             .background(if (selecionado) MaterialTheme.colorScheme.primary.copy(alpha = 0.10f) else Color.Transparent)
             .padding(horizontal = 20.dp, vertical = 10.dp),
@@ -136,7 +137,7 @@ fun FileRow(
 @Composable
 fun FileCell(e: FileEntry, selecionando: Boolean, selecionado: Boolean, onClick: () -> Unit, onLongClick: () -> Unit) {
     Column(
-        Modifier.clip(RoundedCornerShape(16.dp))
+        Modifier.tvFocus(grow = 1.05f).clip(RoundedCornerShape(16.dp))
             .combinedClickable(onClick = onClick, onLongClick = onLongClick)
             .background(if (selecionado) MaterialTheme.colorScheme.primary.copy(alpha = 0.12f) else Color.Transparent)
             .padding(6.dp),
@@ -182,8 +183,8 @@ fun OpPanel(modifier: Modifier = Modifier) {
                         color = if (op.erro != null) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant,
                         maxLines = 3, overflow = TextOverflow.Ellipsis)
                 }
-                if (op.terminou) TextButton(onClick = { Ops.dismiss() }) { Text("OK") }
-                else TextButton(onClick = { Ops.cancel() }) { Text("Cancelar") }
+                if (op.terminou) TextButton(onClick = { Ops.dismiss() }, Modifier.tvFocus(24.dp)) { Text("OK") }
+                else TextButton(onClick = { Ops.cancel() }, Modifier.tvFocus(24.dp)) { Text("Cancelar") }
             }
             if (!op.terminou) {
                 Spacer(Modifier.height(10.dp))

@@ -88,11 +88,11 @@ fun NetworkScreen(vm: MainVm, screen: Screen.Network) {
         topBar = {
             TopAppBar(
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background),
-                navigationIcon = { IconButton(onClick = { vm.pop() }) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Voltar") } },
+                navigationIcon = { IconButton(modifier = Modifier.tvFocus(24.dp), onClick = { vm.pop() }) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Voltar") } },
                 title = { Text("Servidores de rede", fontWeight = FontWeight.SemiBold) },
                 actions = {
                     if (buscando) CircularProgressIndicator(Modifier.padding(end = 16.dp).size(20.dp), strokeWidth = 2.dp)
-                    else IconButton(onClick = { scope.launch { Descobertas.buscar(ctx.applicationContext) } }) { Icon(Icons.Filled.Refresh, "Buscar") }
+                    else IconButton(modifier = Modifier.tvFocus(24.dp), onClick = { scope.launch { Descobertas.buscar(ctx.applicationContext) } }) { Icon(Icons.Filled.Refresh, "Buscar") }
                 },
             )
         },
@@ -111,7 +111,7 @@ fun NetworkScreen(vm: MainVm, screen: Screen.Network) {
                                 }
                                 var menu by remember { mutableStateOf(false) }
                                 Box {
-                                    IconButton(onClick = { menu = true }) { Icon(Icons.Filled.MoreVert, "Opções") }
+                                    IconButton(modifier = Modifier.tvFocus(24.dp), onClick = { menu = true }) { Icon(Icons.Filled.MoreVert, "Opções") }
                                     DropdownMenu(menu, { menu = false }) {
                                         DropdownMenuItem({ Text("Editar") }, {
                                             menu = false
@@ -185,14 +185,14 @@ fun ServerDialog(inicial: ServerDraft, onDismiss: () -> Unit, onSaved: (SmbServe
         onDismissRequest = { if (!testando) onDismiss() },
         title = { Text(if (inicial.id == null) "Servidor SMB" else "Editar servidor") },
         text = {
-            Column(Modifier.verticalScroll(rememberScrollState())) {
+            Column(Modifier.verticalScroll(rememberScrollState()).setasTrocamDeCampo()) {
                 OutlinedTextField(d.host, { d = d.copy(host = it.trim()) }, label = { Text("Endereço (IP ou nome)") }, singleLine = true,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri), modifier = Modifier.fillMaxWidth())
                 OutlinedTextField(d.nome, { d = d.copy(nome = it) }, label = { Text("Nome de exibição (opcional)") }, singleLine = true,
                     modifier = Modifier.fillMaxWidth().padding(top = 6.dp))
-                Row(Modifier.fillMaxWidth().clickable { d = d.copy(convidado = !d.convidado) }.padding(top = 8.dp),
+                Row(Modifier.fillMaxWidth().tvFocus(12.dp).clickable { d = d.copy(convidado = !d.convidado) }.padding(top = 8.dp),
                     verticalAlignment = Alignment.CenterVertically) {
-                    Checkbox(d.convidado, { d = d.copy(convidado = it) }); Text("Entrar como convidado")
+                    Checkbox(d.convidado, null); Text("Entrar como convidado")
                 }
                 if (!d.convidado) {
                     OutlinedTextField(d.usuario, { d = d.copy(usuario = it) }, label = { Text("Usuário") }, singleLine = true,
@@ -201,11 +201,11 @@ fun ServerDialog(inicial: ServerDraft, onDismiss: () -> Unit, onSaved: (SmbServe
                         d.senha, { d = d.copy(senha = it) }, label = { Text("Senha") }, singleLine = true,
                         visualTransformation = if (verSenha) VisualTransformation.None else PasswordVisualTransformation(),
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                        trailingIcon = { IconButton(onClick = { verSenha = !verSenha }) { Icon(if (verSenha) Icons.Filled.VisibilityOff else Icons.Filled.Visibility, null) } },
+                        trailingIcon = { IconButton(modifier = Modifier.tvFocus(24.dp), onClick = { verSenha = !verSenha }) { Icon(if (verSenha) Icons.Filled.VisibilityOff else Icons.Filled.Visibility, null) } },
                         modifier = Modifier.fillMaxWidth().padding(top = 6.dp),
                     )
                 }
-                TextButton(onClick = { avancado = !avancado }) { Text(if (avancado) "Ocultar avançado" else "Avançado") }
+                TextButton(onClick = { avancado = !avancado }, Modifier.tvFocus(24.dp)) { Text(if (avancado) "Ocultar avançado" else "Avançado") }
                 if (avancado) {
                     OutlinedTextField(d.porta.toString(), { d = d.copy(porta = it.filter(Char::isDigit).take(5).toIntOrNull() ?: 445) },
                         label = { Text("Porta") }, singleLine = true, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
@@ -220,7 +220,7 @@ fun ServerDialog(inicial: ServerDraft, onDismiss: () -> Unit, onSaved: (SmbServe
             }
         },
         confirmButton = {
-            TextButton(enabled = d.host.isNotBlank() && !testando, onClick = {
+            TextButton(modifier = Modifier.tvFocus(24.dp), enabled = d.host.isNotBlank() && !testando, onClick = {
                 testando = true; erro = null
                 val s = SmbServer(
                     id = d.id ?: java.util.UUID.randomUUID().toString(),
@@ -245,7 +245,7 @@ fun ServerDialog(inicial: ServerDraft, onDismiss: () -> Unit, onSaved: (SmbServe
                 }
             }) { Text("Conectar") }
         },
-        dismissButton = { TextButton(onClick = onDismiss, enabled = !testando) { Text("Cancelar") } },
+        dismissButton = { TextButton(modifier = Modifier.tvFocus(24.dp), onClick = onDismiss, enabled = !testando) { Text("Cancelar") } },
     )
 }
 

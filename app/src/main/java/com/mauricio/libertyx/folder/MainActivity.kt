@@ -26,6 +26,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.windowInsetsTopHeight
 import androidx.compose.material.icons.Icons
@@ -42,6 +43,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.focus.focusRequester
+import com.mauricio.libertyx.folder.ui.Device
+import com.mauricio.libertyx.folder.ui.tvFocus
 import androidx.core.content.ContextCompat
 import com.mauricio.libertyx.folder.ui.ArquivosTheme
 import com.mauricio.libertyx.folder.ui.HomeScreen
@@ -64,7 +68,12 @@ class MainActivity : ComponentActivity() {
         }
         setContent {
             ArquivosTheme {
-                Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
+                // Surface, e não Box com fundo: é ela que define a cor do texto.
+                // Sem isso, texto solto sai preto — invisível no tema escuro e na TV.
+                androidx.compose.material3.Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) { Box(
+                    // Margem de segurança da TV: há aparelho que corta ~5% das bordas.
+                    Modifier.fillMaxSize().then(if (Device.isTv) Modifier.padding(horizontal = 48.dp, vertical = 24.dp) else Modifier)
+                ) {
                     if (!temAcesso) PedirAcesso() else {
                         BackHandler(vm.stack.size > 1) { vm.pop() }
                         // Com "mover/copiar" pendente, voltar no início cancela em vez de fechar o app.
@@ -95,7 +104,7 @@ class MainActivity : ComponentActivity() {
                             .windowInsetsTopHeight(androidx.compose.foundation.layout.WindowInsets.statusBars)
                             .background(MaterialTheme.colorScheme.background))
                     }
-                }
+                } }
             }
         }
     }
@@ -128,15 +137,26 @@ class MainActivity : ComponentActivity() {
 
     private fun pedir() {
         if (Build.VERSION.SDK_INT >= 30) {
-            try {
-                startActivity(Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION, Uri.parse("package:$packageName")))
-            } catch (_: Exception) {
-                startActivity(Intent(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION))
+            val telas = listOf(
+                Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION, Uri.parse("package:$packageName")),
+                Intent(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION),
+            )
+            for (t in telas) {
+                if (runCatching { startActivity(t) }.isSuccess) return
             }
+            // Há Fire TV sem essa tela nas configurações: sobra o acesso às mídias,
+            // e o aviso de como liberar o resto.
+            val midias = if (Build.VERSION.SDK_INT >= 33) arrayOf(
+                Manifest.permission.READ_MEDIA_IMAGES, Manifest.permission.READ_MEDIA_VIDEO, Manifest.permission.READ_MEDIA_AUDIO,
+            ) else arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE)
+            requestPermissions(midias, 1)
+            semTelaDeAcesso = true
         } else {
             requestPermissions(arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE), 1)
         }
     }
+
+    private var semTelaDeAcesso by mutableStateOf(false)
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
@@ -155,8 +175,15 @@ class MainActivity : ComponentActivity() {
                 "Para mostrar, copiar e organizar os arquivos do aparelho, o LibertyX Folder precisa do acesso a todos os arquivos.",
                 textAlign = TextAlign.Center, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 12.dp),
             )
-            Button(onClick = { pedir() }, Modifier.padding(top = 28.dp).fillMaxWidth()) { Text("Permitir") }
-            TextButton(onClick = { vm.push(Screen.Network()); temAcesso = true }) { Text("Só usar servidores de rede") }
+            if (semTelaDeAcesso) Text(
+                "Este aparelho não tem a tela de acesso a todos os arquivos. Pelo computador, libere com:\n" +
+                    "adb shell appops set $packageName MANAGE_EXTERNAL_STORAGE allow",
+                textAlign = TextAlign.Center, color = MaterialTheme.colorScheme.error, modifier = Modifier.padding(top = 16.dp),
+            )
+            val foco = androidx.compose.runtime.remember { androidx.compose.ui.focus.FocusRequester() }
+            Button(onClick = { pedir() }, Modifier.padding(top = 28.dp).widthIn(max = 480.dp).fillMaxWidth().focusRequester(foco).tvFocus(24.dp)) { Text("Permitir") }
+            TextButton(onClick = { vm.push(Screen.Network()); temAcesso = true }, Modifier.tvFocus(24.dp)) { Text("Só usar servidores de rede") }
+            if (Device.isTv) androidx.compose.runtime.LaunchedEffect(Unit) { runCatching { foco.requestFocus() } }
         }
     }
 }
