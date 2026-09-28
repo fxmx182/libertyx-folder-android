@@ -42,8 +42,8 @@ def elipse(rx, ry, ang, n=360):
     return affinity.rotate(p, ang, origin=C)
 
 
-def pasta(w=24.5, h=18.8, aba=0.44, alt_aba=3.5, inclina=2.9, r=1.8, cx=54, cy=54):
-    """A pasta do miolo: corpo, aba erguida à esquerda e cantos arredondados.
+def pasta(w=60, h=47, aba=0.40, alt_aba=8.0, inclina=5.5, r=5.0, cx=54, cy=55.5):
+    """A pasta: corpo, aba erguida à esquerda e cantos arredondados.
 
     Os cantos saem de erodir e dilatar de volta (shapely), e não de curvas à
     mão: o mesmo raio vale no canto de fora e no degrau da aba, que é o que
@@ -55,14 +55,13 @@ def pasta(w=24.5, h=18.8, aba=0.44, alt_aba=3.5, inclina=2.9, r=1.8, cx=54, cy=5
         (x0, y0), (xa, y0), (xa + inclina, y0 + alt_aba), (x0 + w, y0 + alt_aba),
         (x0 + w, y0 + h), (x0, y0 + h),
     ])
-    return p.buffer(-r, join_style="round").buffer(r, join_style="round")
+    return p.buffer(-r, join_style="round").buffer(r, join_style="round"), (x0, y0 + alt_aba, w, h - alt_aba)
 
 
-def marca(rx=34, ry=11.5, irx=28.5, iry=10, ang=45, folga=2.4, trama=1.1, **kw):
+def fitas(rx=35, ry=13.0, irx=27.5, iry=8.8, ang=45, trama=1.3):
+    """As duas fitas cruzadas em X da marca, trançadas onde se cruzam."""
     A = elipse(rx, ry, -ang).difference(elipse(irx, iry, -ang))   # sobe para a direita
     B = elipse(rx, ry, ang).difference(elipse(irx, iry, ang))
-    miolo = pasta(**kw)
-    # trama: nos cruzamentos que ficam à vista, uma fita passa por cima da outra
     if trama:
         cruz = A.intersection(B)
         pts = [g.centroid for g in cruz.geoms] if cruz.geom_type == "MultiPolygon" else [cruz.centroid]
@@ -70,8 +69,27 @@ def marca(rx=34, ry=11.5, irx=28.5, iry=10, ang=45, folga=2.4, trama=1.1, **kw):
             zona = p.buffer(7)
             if i % 2 == 0: B = B.difference(A.intersection(zona).buffer(trama))
             else:          A = A.difference(B.intersection(zona).buffer(trama))
-    fitas = unary_union([A, B]).difference(miolo.buffer(folga, join_style="round"))
-    return fitas, miolo
+    return unary_union([A, B])
+
+
+def marca(vinco=2.2, folga=2.6):
+    """O símbolo do Folder: uma pasta de ouro com o X da marca **vazado nela**.
+
+    Primeira tentativa foi o X do Player com uma pasta no lugar do play, e o
+    usuário reclamou com razão: na tela inicial os dois viravam o mesmo borrão
+    dourado sobre preto. O que a pessoa enxerga num ícone pequeno é a mancha,
+    não o detalhe do meio — então aqui a mancha é invertida. O Player é escuro
+    com um X de ouro; este é quase todo de ouro, com o X **aberto** na cara da
+    pasta. De longe não há como confundir; de perto é a mesma marca.
+    """
+    corpo, (px, py, pw, ph) = pasta()
+    # o X encolhido para caber na frente da pasta, com folga nas beiradas
+    lado = min(pw, ph) * 1.90
+    x = affinity.scale(fitas(), lado / 108, lado / 108, origin=C)
+    x = affinity.translate(x, 0, py + ph / 2 - 54)
+    # vinco: o fio escuro que separa a aba da frente, senão a pasta vira um bloco
+    vinco_geom = Polygon([(px, py), (px + pw, py), (px + pw, py + vinco), (px, py + vinco)])
+    return corpo.difference(x.buffer(0.0)).difference(vinco_geom.buffer(0.0)), x
 
 
 def para_path(g, nd=2):
@@ -92,13 +110,12 @@ def png(svg, px, h=None):
     return Image.open(io.BytesIO(bytes(b))).convert("RGBA")
 
 
-ESC = 0.9   # o símbolo dentro do círculo seguro de 66 de 108
-fitas, miolo = marca()
-fitas = affinity.scale(fitas, ESC, ESC, origin=C)
-miolo = affinity.scale(miolo, ESC, ESC, origin=C)
-PF, PM = para_path(fitas), para_path(miolo)
+ESC = 0.84   # o símbolo dentro da área garantida do ícone adaptativo
+corpo, xis = marca()
+corpo = affinity.scale(corpo, ESC, ESC, origin=C)
+PF = para_path(corpo)
 def e(v): return 54 + (v - 54) * ESC
-G_OURO = (e(26), e(26), e(82), e(82)); G_P = (e(40), e(42), e(68), e(66))
+G_OURO = (e(20), e(22), e(88), e(86))
 
 
 def vd_grad(tipo, attrs, lst):
@@ -111,24 +128,21 @@ def vd_grad(tipo, attrs, lst):
 CAB = '<?xml version="1.0" encoding="utf-8"?>\n'
 
 
-def vector(corpo, w=108, vw=108, vh=108, h=None, tx=0, ty=0, comentario=""):
+def vector(corpo_xml, w=108, vw=108, vh=108, h=None, tx=0, ty=0, comentario=""):
     h = h or w
     g0, g1 = (f'    <group android:translateX="{tx}" android:translateY="{ty}">\n', '    </group>\n') if (tx or ty) else ("", "")
     return (CAB + comentario +
         '<vector xmlns:android="http://schemas.android.com/apk/res/android"\n    xmlns:aapt="http://schemas.android.com/aapt"\n'
         f'    android:width="{w}dp" android:height="{h}dp"\n    android:viewportWidth="{vw}" android:viewportHeight="{vh}">\n'
-        + g0 + corpo + g1 + '</vector>\n')
+        + g0 + corpo_xml + g1 + '</vector>\n')
 
 
 def corpo_marca(mono=False):
     if mono:
-        return (f'    <path android:fillType="evenOdd" android:fillColor="#FFFFFFFF"\n        android:pathData="{PF}" />\n'
-                f'    <path android:fillColor="#FFFFFFFF"\n        android:pathData="{PM}" />\n')
-    x1, y1, x2, y2 = G_OURO; a1, b1, a2, b2 = G_P
+        return f'    <path android:fillType="evenOdd" android:fillColor="#FFFFFFFF"\n        android:pathData="{PF}" />\n'
+    x1, y1, x2, y2 = G_OURO
     return (f'    <path android:fillType="evenOdd"\n        android:pathData="{PF}">\n'
-            + vd_grad("linear", f'android:startX="{x1:.2f}" android:startY="{y1:.2f}" android:endX="{x2:.2f}" android:endY="{y2:.2f}"', OURO) + '\n    </path>\n'
-            f'    <path\n        android:pathData="{PM}">\n'
-            + vd_grad("linear", f'android:startX="{a1:.2f}" android:startY="{b1:.2f}" android:endX="{a2:.2f}" android:endY="{b2:.2f}"', OURO_P) + '\n    </path>\n')
+            + vd_grad("linear", f'android:startX="{x1:.2f}" android:startY="{y1:.2f}" android:endX="{x2:.2f}" android:endY="{y2:.2f}"', OURO_P) + '\n    </path>\n')
 
 
 COM_F = ('<!-- O símbolo do LibertyX Folder: as duas fitas de ouro cruzadas em X da\n'
@@ -139,7 +153,7 @@ COM_F = ('<!-- O símbolo do LibertyX Folder: as duas fitas de ouro cruzadas em 
 open(f"{RES}/drawable/ic_launcher_foreground.xml", "w").write(vector(corpo_marca(), comentario=COM_F))
 open(f"{RES}/drawable/ic_launcher_monochrome.xml", "w").write(vector(corpo_marca(True),
     comentario='<!-- O mesmo símbolo numa cor só, para o ícone temático do Android 13+. -->\n'))
-x0, y0, x1, y1 = fitas.union(miolo).bounds; lado = max(x1 - x0, y1 - y0) + 1
+x0, y0, x1, y1 = corpo.bounds; lado = max(x1 - x0, y1 - y0) + 1
 open(f"{RES}/drawable/ic_marca.xml", "w").write(vector(corpo_marca(), w=48, vw=round(lado, 2), vh=round(lado, 2),
     tx=round(-(54 - lado / 2), 2), ty=round(-(54 - lado / 2), 2),
     comentario='<!-- O símbolo sem a margem do ícone adaptativo, para a marca dentro do app. -->\n'))
@@ -150,13 +164,12 @@ open(f"{RES}/drawable/ic_launcher_background.xml", "w").write(vector(fundo_xml,
 
 
 def svg(size, fundo=True):
-    x1, y1, x2, y2 = G_OURO; a1, b1, a2, b2 = G_P
+    x1, y1, x2, y2 = G_OURO
     return f'''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 108 108" width="{size}" height="{size}">
 <defs><radialGradient id="f" cx="54" cy="34" r="82" gradientUnits="userSpaceOnUse">{stops(FUNDO)}</radialGradient>
-<linearGradient id="o" x1="{x1}" y1="{y1}" x2="{x2}" y2="{y2}" gradientUnits="userSpaceOnUse">{stops(OURO)}</linearGradient>
-<linearGradient id="p" x1="{a1}" y1="{b1}" x2="{a2}" y2="{b2}" gradientUnits="userSpaceOnUse">{stops(OURO_P)}</linearGradient></defs>
+<linearGradient id="o" x1="{x1}" y1="{y1}" x2="{x2}" y2="{y2}" gradientUnits="userSpaceOnUse">{stops(OURO_P)}</linearGradient></defs>
 {'<rect width="108" height="108" fill="url(#f)"/>' if fundo else ''}
-<path fill-rule="evenodd" fill="url(#o)" d="{PF}"/><path fill="url(#p)" d="{PM}"/></svg>'''
+<path fill-rule="evenodd" fill="url(#o)" d="{PF}"/></svg>'''
 
 
 # Loja: 512 quadrado cheio, já com o corte de 18 que o adaptativo esconde.

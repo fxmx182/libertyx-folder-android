@@ -26,12 +26,17 @@ import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.activity.compose.BackHandler
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
@@ -48,6 +53,7 @@ import com.mauricio.libertyx.folder.fs.FileEntry
 import com.mauricio.libertyx.folder.fs.Loc
 import com.mauricio.libertyx.folder.ops.Ops
 import com.mauricio.libertyx.folder.smb.SmbProvider
+import kotlinx.coroutines.delay
 
 /** O cartão de vidro que agrupa uma seção da tela inicial. */
 @Composable
@@ -192,11 +198,26 @@ fun FileCell(e: FileEntry, selecionando: Boolean, selecionado: Boolean, onClick:
     }
 }
 
-/** Painel de progresso da cópia/movimentação, por cima de qualquer tela. */
+/**
+ * Painel de progresso da cópia/movimentação/exclusão, por cima de qualquer tela.
+ *
+ * Quando termina bem, **some sozinho**: no controle remoto, descer até um botão
+ * que flutua sobre a lista é quase impossível — e um "Concluído" não tem nada a
+ * decidir. Só fica na tela o que precisa ser lido: erro ou cancelamento. Nesse
+ * caso, na TV, o painel chama o foco para si, e o "OK" fica a um toque. Em
+ * qualquer aparelho, Voltar também fecha o painel já terminado.
+ */
 @Composable
 fun OpPanel(modifier: Modifier = Modifier) {
     val s by Ops.state.collectAsState()
     val op = s ?: return
+    val foco = remember { FocusRequester() }
+    LaunchedEffect(op.terminou, op.erro) {
+        if (!op.terminou) return@LaunchedEffect
+        if (op.erro == null) { delay(3_500); Ops.dismiss() }
+        else if (Device.isTv) { delay(150); runCatching { foco.requestFocus() } }
+    }
+    BackHandler(op.terminou) { Ops.dismiss() }
     Box(
         modifier.fillMaxWidth().padding(12.dp)
             .background(Lx.superficie, RoundedCornerShape(Lx.raioCartao))
@@ -220,8 +241,8 @@ fun OpPanel(modifier: Modifier = Modifier) {
                         color = if (op.erro != null) MaterialTheme.colorScheme.error else Lx.apagado,
                         maxLines = 3, overflow = TextOverflow.Ellipsis)
                 }
-                if (op.terminou) TextButton(onClick = { Ops.dismiss() }, Modifier.tvFocus(24.dp)) { Text("OK") }
-                else TextButton(onClick = { Ops.cancel() }, Modifier.tvFocus(24.dp)) { Text("Cancelar") }
+                if (op.terminou) TextButton(onClick = { Ops.dismiss() }, Modifier.focusRequester(foco).tvFocus(24.dp)) { Text("OK") }
+                else TextButton(onClick = { Ops.cancel() }, Modifier.focusRequester(foco).tvFocus(24.dp)) { Text("Cancelar") }
             }
             if (!op.terminou) {
                 Spacer(Modifier.height(10.dp))
