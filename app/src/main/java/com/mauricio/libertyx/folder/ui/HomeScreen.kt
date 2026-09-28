@@ -63,6 +63,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.foundation.Image
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.withStyle
+import com.mauricio.libertyx.folder.R
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
@@ -112,35 +118,44 @@ fun HomeScreen(vm: MainVm, screen: Screen.Home) {
     LazyColumn(Modifier.fillMaxSize(), state = screen.listState, contentPadding = PaddingValues(bottom = 110.dp)) {
         item {
             Row(
-                Modifier.statusBarsPadding().padding(start = 24.dp, end = 12.dp).padding(top = 48.dp, bottom = 20.dp),
+                Modifier.statusBarsPadding().padding(start = 20.dp, end = 14.dp).padding(top = 40.dp, bottom = 18.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Text("LibertyX Folder", fontSize = 30.sp, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
-                IconButton(modifier = Modifier.tvFocus(24.dp), onClick = { vm.push(Screen.Settings()) }) {
-                    Icon(Icons.Filled.Settings, "Configurações")
+                // A marca do app na própria tela, e não só no launcher: o mesmo
+                // desenho do ícone, recortado sem a margem do adaptativo.
+                Image(painterResource(R.drawable.ic_marca), null, Modifier.size(40.dp))
+                Text(
+                    buildAnnotatedString {
+                        append("LibertyX")
+                        withStyle(SpanStyle(color = Lx.ouro)) { append(" Folder") }
+                    },
+                    style = Lx.titulao, modifier = Modifier.padding(start = 12.dp).weight(1f),
+                )
+                Box(Modifier.size(42.dp).clip(CircleShape).vidro(21.dp), contentAlignment = Alignment.Center) {
+                    IconButton(modifier = Modifier.tvFocus(21.dp), onClick = { vm.push(Screen.Settings()) }) {
+                        Icon(Icons.Filled.Settings, "Configurações", tint = Lx.apagado)
+                    }
                 }
             }
         }
         item {
-            Surface(
-                Modifier.padding(horizontal = 16.dp).fillMaxWidth(), shape = RoundedCornerShape(28.dp),
-                color = MaterialTheme.colorScheme.surfaceContainer,
-            ) {
+            Box(Modifier.padding(horizontal = 16.dp).fillMaxWidth().vidro(28.dp)) {
                 if (Device.isTv) Row(
                     Modifier.fillMaxWidth().tvFocus(28.dp).clickable { buscaTv = true }.padding(horizontal = 16.dp, vertical = 16.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    Icon(Icons.Filled.Search, null)
-                    Text("Pesquisar no aparelho", Modifier.padding(start = 12.dp), color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Icon(Icons.Filled.Search, null, tint = Lx.apagado)
+                    Text("Pesquisar no aparelho", Modifier.padding(start = 12.dp), color = Lx.apagado)
                 } else TextField(
                     termo, { termo = it }, singleLine = true,
-                    placeholder = { Text("Pesquisar no aparelho") },
-                    leadingIcon = { Icon(Icons.Filled.Search, null) },
+                    placeholder = { Text("Pesquisar no aparelho", color = Lx.tenue) },
+                    leadingIcon = { Icon(Icons.Filled.Search, null, tint = Lx.apagado) },
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
                     keyboardActions = KeyboardActions(onSearch = { if (termo.isNotBlank()) vm.push(Screen.Search(termo.trim(), null)) }),
                     colors = TextFieldDefaults.colors(
                         focusedContainerColor = Color.Transparent, unfocusedContainerColor = Color.Transparent,
                         focusedIndicatorColor = Color.Transparent, unfocusedIndicatorColor = Color.Transparent,
+                        cursorColor = Lx.ouro,
                     ),
                     modifier = Modifier.fillMaxWidth(),
                 )
@@ -152,9 +167,10 @@ fun HomeScreen(vm: MainVm, screen: Screen.Home) {
             item {
                 LazyRow(contentPadding = PaddingValues(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                     items(recentes, key = { it.loc.toString() }) { e ->
-                        Column(Modifier.width(96.dp).tvFocus(14.dp, 1.06f).clip(RoundedCornerShape(14.dp)).clickable { Open.open(ctx, e) }) {
-                            Thumb(e, 96.dp, corner = 14.dp)
-                            Text(e.name, fontSize = 12.sp, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(top = 4.dp, start = 2.dp))
+                        Column(Modifier.width(104.dp).tvFocus(16.dp, 1.06f).clip(RoundedCornerShape(16.dp)).clickable { Open.open(ctx, e) }) {
+                            Thumb(e, 104.dp, corner = 16.dp)
+                            Text(e.name, fontSize = 12.sp, maxLines = 1, overflow = TextOverflow.Ellipsis,
+                                color = Lx.apagado, modifier = Modifier.padding(top = 6.dp, start = 2.dp))
                         }
                     }
                 }
@@ -165,13 +181,13 @@ fun HomeScreen(vm: MainVm, screen: Screen.Home) {
         item {
             Card(Modifier.padding(horizontal = 16.dp)) {
                 val cats = listOf(
-                    Triple(Category.Images, Icons.Filled.Image, Color(0xFF9C5BE8)),
-                    Triple(Category.Videos, Icons.Filled.VideoLibrary, Color(0xFFFF4F7B)),
-                    Triple(Category.Audio, Icons.Filled.Audiotrack, Color(0xFF16B3A5)),
-                    Triple(Category.Documents, Icons.Filled.Description, Color(0xFFF07A1E)),
-                    Triple(Category.Downloads, Icons.Filled.Download, Color(0xFF0A6CFF)),
-                    Triple(Category.Apks, Icons.Filled.Android, Color(0xFF6DBE3F)),
-                    Triple(Category.Compressed, Icons.Filled.FolderZip, Color(0xFFB07A3A)),
+                    Triple(Category.Images, Icons.Filled.Image, Color(0xFFC08BFF)),
+                    Triple(Category.Videos, Icons.Filled.VideoLibrary, Color(0xFFFF6E8A)),
+                    Triple(Category.Audio, Icons.Filled.Audiotrack, Color(0xFF35D0BE)),
+                    Triple(Category.Documents, Icons.Filled.Description, Color(0xFF5B9CFF)),
+                    Triple(Category.Downloads, Icons.Filled.Download, Lx.ouro),
+                    Triple(Category.Apks, Icons.Filled.Android, Color(0xFF8BD962)),
+                    Triple(Category.Compressed, Icons.Filled.FolderZip, Color(0xFFD9A15C)),
                 )
                 cats.chunked(4).forEach { linha ->
                     Row(Modifier.fillMaxWidth().padding(horizontal = 8.dp)) {
@@ -199,12 +215,12 @@ fun HomeScreen(vm: MainVm, screen: Screen.Home) {
                     ) {
                         RowIcon(
                             when { !v.removable -> Icons.Filled.PhoneAndroid; v.name.contains("USB", true) -> Icons.Filled.Usb; else -> Icons.Filled.SdCard },
-                            Color(0xFF0A6CFF),
+                            Lx.ouro,
                         )
                         Column(Modifier.padding(start = 16.dp).weight(1f)) {
                             Text(v.name, style = MaterialTheme.typography.bodyLarge)
                             if (v.total > 0) {
-                                Text("${Fmt.size(v.total - v.free)} de ${Fmt.size(v.total)}", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                Text("${Fmt.size(v.total - v.free)} de ${Fmt.size(v.total)}", fontSize = 12.sp, color = Lx.tenue)
                                 Spacer(Modifier.height(6.dp)); UsageBar(v.total - v.free, v.total)
                             }
                         }
@@ -217,7 +233,10 @@ fun HomeScreen(vm: MainVm, screen: Screen.Home) {
         if (cofreVisivel) item {
             val aberto by com.mauricio.libertyx.folder.vault.Vault.unlocked.collectAsState()
             val vv by com.mauricio.libertyx.folder.vault.Vault.versao.collectAsState()
-            Card(Modifier.padding(start = 16.dp, end = 16.dp, top = 12.dp)) {
+            Column(
+                Modifier.padding(start = 16.dp, end = 16.dp, top = 14.dp).fillMaxWidth()
+                    .vidro(borda = Lx.ouro.copy(alpha = 0.30f)).padding(vertical = 6.dp)
+            ) {
                 val sub = remember(aberto, vv) {
                     when {
                         !com.mauricio.libertyx.folder.vault.Vault.isSetUp -> "Guarde arquivos cifrados, protegidos por PIN"
@@ -232,9 +251,9 @@ fun HomeScreen(vm: MainVm, screen: Screen.Home) {
         item {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 SectionTitle("Rede", Modifier.weight(1f))
-                if (buscando) CircularProgressIndicator(Modifier.padding(top = 12.dp, end = 12.dp).size(16.dp), strokeWidth = 2.dp)
-                else IconButton(onClick = { scope.launch { Descobertas.buscar(ctx.applicationContext) } }, Modifier.padding(top = 12.dp).tvFocus(24.dp)) {
-                    Icon(Icons.Filled.Refresh, "Buscar de novo", tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                if (buscando) CircularProgressIndicator(Modifier.padding(top = 16.dp, end = 12.dp).size(16.dp), strokeWidth = 2.dp, color = Lx.ouro)
+                else IconButton(onClick = { scope.launch { Descobertas.buscar(ctx.applicationContext) } }, Modifier.padding(top = 14.dp).tvFocus(24.dp)) {
+                    Icon(Icons.Filled.Refresh, "Buscar de novo", tint = Lx.apagado)
                 }
             }
         }
@@ -254,7 +273,7 @@ fun HomeScreen(vm: MainVm, screen: Screen.Home) {
                 if (servidores.isEmpty() && achados.isEmpty()) {
                     Text(
                         if (buscando) "Procurando servidores SMB na rede…" else "Nenhum servidor encontrado",
-                        Modifier.padding(horizontal = 20.dp, vertical = 12.dp), color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        Modifier.padding(horizontal = 20.dp, vertical = 12.dp), color = Lx.tenue, fontSize = 14.sp,
                     )
                 }
                 NetRow(Icons.Filled.Add, "Servidores de rede", "Procurar e adicionar servidor SMB") { vm.push(Screen.Network()) }
@@ -276,10 +295,9 @@ private fun CategoryTile(nome: String, icone: ImageVector, cor: Color, modifier:
         modifier.tvFocus(16.dp, 1.05f).clip(RoundedCornerShape(16.dp)).clickable(onClick = onClick).padding(vertical = 12.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Box(Modifier.size(48.dp).clip(CircleShape).background(cor.copy(alpha = 0.15f)), contentAlignment = Alignment.Center) {
-            Icon(icone, null, tint = cor, modifier = Modifier.size(26.dp))
-        }
-        Text(nome, fontSize = 12.sp, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(top = 6.dp))
+        Selo(cor, 50.dp, 16.dp) { Icon(icone, null, tint = cor, modifier = Modifier.size(25.dp)) }
+        Text(nome, fontSize = 12.sp, maxLines = 1, overflow = TextOverflow.Ellipsis, color = Lx.apagado,
+            modifier = Modifier.padding(top = 8.dp))
     }
 }
 
@@ -289,10 +307,10 @@ fun NetRow(icon: ImageVector, titulo: String, sub: String, destaque: Boolean = f
         Modifier.fillMaxWidth().tvFocus(24.dp).clickable(onClick = onClick).padding(horizontal = 20.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        RowIcon(icon, if (destaque) Color(0xFF16B3A5) else Color(0xFF0A6CFF))
+        RowIcon(icon, if (destaque) Lx.verde else Lx.ouro)
         Column(Modifier.padding(start = 16.dp).weight(1f)) {
             Text(titulo, style = MaterialTheme.typography.bodyLarge, maxLines = 1, overflow = TextOverflow.Ellipsis)
-            Text(sub, fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text(sub, fontSize = 12.sp, lineHeight = 16.sp, color = Lx.tenue, maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
     }
 }

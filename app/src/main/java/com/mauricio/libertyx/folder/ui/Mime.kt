@@ -75,20 +75,26 @@ object Mime {
         Kind.Other -> Icons.Filled.InsertDriveFile
     }
 
+    /**
+     * A cor de cada tipo. Escolhidas para o fundo escuro: no claro elas eram
+     * cores cheias, que sobre preto ficam pesadas — aqui são as mesmas
+     * famílias, um tom acima e menos saturadas. A pasta é a cor da marca, que
+     * é também a do ícone do app.
+     */
     fun color(e: FileEntry): Color = when (kind(e)) {
-        Kind.Folder -> Color(0xFFFFB61E)
-        Kind.Image -> Color(0xFF9C5BE8)
-        Kind.Video -> Color(0xFFFF4F7B)
-        Kind.Audio -> Color(0xFF16B3A5)
-        Kind.Pdf -> Color(0xFFE5433B)
-        Kind.Doc -> Color(0xFF2F74E0)
-        Kind.Sheet -> Color(0xFF1E9E57)
-        Kind.Slides -> Color(0xFFF07A1E)
-        Kind.Text -> Color(0xFF7A8594)
-        Kind.Archive -> Color(0xFFB07A3A)
-        Kind.Apk -> Color(0xFF6DBE3F)
-        Kind.Code -> Color(0xFF5566D8)
-        Kind.Other -> Color(0xFF8E8E93)
+        Kind.Folder -> Lx.ouro
+        Kind.Image -> Color(0xFFC08BFF)
+        Kind.Video -> Color(0xFFFF6E8A)
+        Kind.Audio -> Color(0xFF35D0BE)
+        Kind.Pdf -> Color(0xFFFF6B5E)
+        Kind.Doc -> Color(0xFF5B9CFF)
+        Kind.Sheet -> Color(0xFF46C97E)
+        Kind.Slides -> Color(0xFFFFA24D)
+        Kind.Text -> Color(0xFFA8B3C2)
+        Kind.Archive -> Color(0xFFD9A15C)
+        Kind.Apk -> Color(0xFF8BD962)
+        Kind.Code -> Color(0xFF8A96FF)
+        Kind.Other -> Color(0xFF9EA3AD)
     }
 }
 

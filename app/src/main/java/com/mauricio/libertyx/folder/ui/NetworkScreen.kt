@@ -84,12 +84,12 @@ fun NetworkScreen(vm: MainVm, screen: Screen.Network) {
     LaunchedEffect(Unit) { scope.launch { Descobertas.buscar(ctx.applicationContext) } }
 
     Scaffold(
-        containerColor = MaterialTheme.colorScheme.background,
+        containerColor = androidx.compose.ui.graphics.Color.Transparent,
         topBar = {
             TopAppBar(
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background),
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = androidx.compose.ui.graphics.Color.Transparent),
                 navigationIcon = { IconButton(modifier = Modifier.tvFocus(24.dp), onClick = { vm.pop() }) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Voltar") } },
-                title = { Text("Servidores de rede", fontWeight = FontWeight.SemiBold) },
+                title = { Text("Servidores de rede", fontWeight = FontWeight.Bold) },
                 actions = {
                     if (buscando) CircularProgressIndicator(Modifier.padding(end = 16.dp).size(20.dp), strokeWidth = 2.dp)
                     else IconButton(modifier = Modifier.tvFocus(24.dp), onClick = { scope.launch { Descobertas.buscar(ctx.applicationContext) } }) { Icon(Icons.Filled.Refresh, "Buscar") }

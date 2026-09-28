@@ -1,9 +1,13 @@
 <resources>
-    <style name="Theme.Arquivos" parent="android:Theme.Material.Light.NoActionBar">
+    <!-- O app é escuro sempre (a marca é ouro), então não há variante clara:
+         o que existia em values-night virou este, e o tema do sistema não muda
+         mais a cara do app. -->
+    <style name="Theme.Arquivos" parent="android:Theme.Material.NoActionBar">
         <item name="android:windowBackground">@color/fundo</item>
         <item name="android:statusBarColor">@android:color/transparent</item>
         <item name="android:navigationBarColor">@android:color/transparent</item>
+        <item name="android:colorAccent">@color/ouro</item>
     </style>
-    <color name="fundo">#F4F4F6</color>
-    <color name="icone_fundo">#0B0B0B</color>
+    <color name="fundo">#0C0B0A</color>
+    <color name="ouro">#FBC501</color>
 </resources>

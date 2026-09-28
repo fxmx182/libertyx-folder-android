@@ -30,7 +30,6 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.windowInsetsTopHeight
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.FolderOpen
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -48,6 +47,7 @@ import com.mauricio.libertyx.folder.ui.Device
 import com.mauricio.libertyx.folder.ui.tvFocus
 import androidx.core.content.ContextCompat
 import com.mauricio.libertyx.folder.ui.ArquivosTheme
+import com.mauricio.libertyx.folder.ui.brilhoDeFundo
 import com.mauricio.libertyx.folder.ui.HomeScreen
 import com.mauricio.libertyx.folder.ui.ListingScreen
 import com.mauricio.libertyx.folder.ui.MainVm
@@ -60,7 +60,12 @@ class MainActivity : ComponentActivity() {
     private var temAcesso by mutableStateOf(false)
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        enableEdgeToEdge()
+        // O app é escuro sempre, então os ícones das barras do sistema são
+        // claros sempre — sem isso eles seguem o tema do aparelho e somem.
+        enableEdgeToEdge(
+            statusBarStyle = androidx.activity.SystemBarStyle.dark(android.graphics.Color.TRANSPARENT),
+            navigationBarStyle = androidx.activity.SystemBarStyle.dark(android.graphics.Color.TRANSPARENT),
+        )
         super.onCreate(savedInstanceState)
         temAcesso = acesso()
         if (Build.VERSION.SDK_INT >= 33 && checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
@@ -71,8 +76,11 @@ class MainActivity : ComponentActivity() {
                 // Surface, e não Box com fundo: é ela que define a cor do texto.
                 // Sem isso, texto solto sai preto — invisível no tema escuro e na TV.
                 androidx.compose.material3.Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) { Box(
+                    // O brilho fica na raiz, atrás de tudo: as telas são
+                    // transparentes e todas ganham a mesma profundidade.
                     // Margem de segurança da TV: há aparelho que corta ~5% das bordas.
-                    Modifier.fillMaxSize().then(if (Device.isTv) Modifier.padding(horizontal = 48.dp, vertical = 24.dp) else Modifier)
+                    Modifier.fillMaxSize().brilhoDeFundo()
+                        .then(if (Device.isTv) Modifier.padding(horizontal = 48.dp, vertical = 24.dp) else Modifier)
                 ) {
                     if (!temAcesso) PedirAcesso() else {
                         BackHandler(vm.stack.size > 1) { vm.pop() }
@@ -100,10 +108,14 @@ class MainActivity : ComponentActivity() {
                             }
                         }
                         Box(Modifier.align(Alignment.BottomCenter).navigationBarsPadding().padding(bottom = 64.dp)) { OpPanel() }
-                        // Faixa sob a barra de status: a lista rolando não passa por baixo dos ícones.
+                        // Faixa sob a barra de status: a lista rolando não passa por baixo
+                        // dos ícones. Em degradê, senão o corte reto apareceria sobre o brilho.
                         Box(Modifier.align(Alignment.TopCenter).fillMaxWidth()
                             .windowInsetsTopHeight(androidx.compose.foundation.layout.WindowInsets.statusBars)
-                            .background(MaterialTheme.colorScheme.background))
+                            .background(androidx.compose.ui.graphics.Brush.verticalGradient(listOf(
+                                MaterialTheme.colorScheme.background,
+                                MaterialTheme.colorScheme.background.copy(alpha = 0.75f),
+                            ))))
                     }
                 } }
             }
@@ -176,11 +188,14 @@ class MainActivity : ComponentActivity() {
             Modifier.fillMaxSize().padding(32.dp), horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = androidx.compose.foundation.layout.Arrangement.Center,
         ) {
-            Icon(Icons.Filled.FolderOpen, null, Modifier.size(72.dp), tint = MaterialTheme.colorScheme.primary)
-            Text("Permitir acesso aos arquivos", style = MaterialTheme.typography.headlineSmall, modifier = Modifier.padding(top = 20.dp), textAlign = TextAlign.Center)
+            androidx.compose.foundation.Image(
+                androidx.compose.ui.res.painterResource(R.drawable.ic_marca), null, Modifier.size(88.dp))
+            Text("Permitir acesso aos arquivos", style = MaterialTheme.typography.headlineSmall,
+                fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
+                modifier = Modifier.padding(top = 20.dp), textAlign = TextAlign.Center)
             Text(
                 "Para mostrar, copiar e organizar os arquivos do aparelho, o LibertyX Folder precisa do acesso a todos os arquivos.",
-                textAlign = TextAlign.Center, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 12.dp),
+                textAlign = TextAlign.Center, color = com.mauricio.libertyx.folder.ui.Lx.apagado, modifier = Modifier.padding(top = 12.dp),
             )
             if (semTelaDeAcesso) Text(
                 "Este aparelho não tem a tela de acesso a todos os arquivos. Pelo computador, libere com:\n" +

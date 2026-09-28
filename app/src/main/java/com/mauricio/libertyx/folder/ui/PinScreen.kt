@@ -1,7 +1,14 @@
 package com.mauricio.libertyx.folder.ui
 
 import android.widget.Toast
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -193,8 +200,16 @@ fun PinScreen(vm: MainVm, screen: Screen.Pin) {
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            Icon(Icons.Filled.Lock, null, Modifier.size(48.dp), tint = MaterialTheme.colorScheme.primary)
-            Text(titulo, fontSize = 22.sp, fontWeight = FontWeight.SemiBold, textAlign = TextAlign.Center)
+            // O cadeado num anel de ouro: é a única tela do app com uma marca
+            // dessas, e é a que precisa dizer sozinha onde a pessoa está.
+            Box(
+                Modifier.size(84.dp).clip(CircleShape)
+                    .background(Brush.radialGradient(listOf(Lx.ouro.copy(alpha = 0.18f), Color.Transparent)))
+                    .border(1.dp, Lx.ouro.copy(alpha = 0.35f), CircleShape),
+                contentAlignment = Alignment.Center,
+            ) { Icon(Icons.Filled.Lock, null, Modifier.size(34.dp), tint = Lx.ouro) }
+            Text(titulo, fontSize = 22.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center,
+                letterSpacing = (-0.4).sp)
             val ajuda = when {
                 espera > 0 -> null
                 screen.modo == PinModo.Criar && etapa == "novo" ->
@@ -202,7 +217,7 @@ fun PinScreen(vm: MainVm, screen: Screen.Pin) {
                 screen.modo == PinModo.Confirmar -> "Por segurança, digite ${if (ehPin) "o PIN" else "a senha"} de novo."
                 else -> null
             }
-            if (ajuda != null) Text(ajuda, color = MaterialTheme.colorScheme.onSurfaceVariant, textAlign = TextAlign.Center, fontSize = 14.sp)
+            if (ajuda != null) Text(ajuda, color = Lx.apagado, textAlign = TextAlign.Center, fontSize = 14.sp)
 
             OutlinedTextField(
                 value = valor,
@@ -226,6 +241,11 @@ fun PinScreen(vm: MainVm, screen: Screen.Pin) {
                     }
                 },
                 isError = erro != null,
+                shape = androidx.compose.foundation.shape.RoundedCornerShape(Lx.raioPequeno),
+                colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = Lx.ouro, cursorColor = Lx.ouro,
+                    unfocusedBorderColor = Lx.vidroBorda, focusedLabelColor = Lx.ouro,
+                ),
                 modifier = Modifier.fillMaxWidth().focusRequester(foco),
             )
             val aviso = when {

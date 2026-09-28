@@ -2,6 +2,7 @@ package com.mauricio.libertyx.folder.ui
 
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -69,6 +70,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -174,11 +176,11 @@ fun ListingScreen(vm: MainVm, screen: Screen) {
     fun erroToast(e: Throwable) = Toast.makeText(ctx, e.message ?: e.toString(), Toast.LENGTH_LONG).show()
 
     Scaffold(
-        containerColor = MaterialTheme.colorScheme.background,
+        containerColor = Color.Transparent,
         topBar = {
             Column {
                 TopAppBar(
-                    colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background),
+                    colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent),
                     navigationIcon = {
                         IconButton(modifier = Modifier.tvFocus(24.dp), onClick = {
                             when { selecionando -> sel.clear(); filtrando -> { filtrando = false; filtro = "" }; else -> vm.pop() }
@@ -195,11 +197,13 @@ fun ListingScreen(vm: MainVm, screen: Screen) {
                                     colors = TextFieldDefaults.colors(
                                         focusedContainerColor = Color.Transparent, unfocusedContainerColor = Color.Transparent,
                                         focusedIndicatorColor = Color.Transparent, unfocusedIndicatorColor = Color.Transparent,
+                                        cursorColor = Lx.ouro,
                                     ),
                                 )
                                 LaunchedEffect(Unit) { foco.requestFocus() }
                             }
-                            else -> Text(titulo, maxLines = 1, overflow = TextOverflow.Ellipsis, fontWeight = FontWeight.SemiBold)
+                            else -> Text(titulo, maxLines = 1, overflow = TextOverflow.Ellipsis,
+                                fontWeight = FontWeight.Bold, letterSpacing = (-0.3).sp)
                         }
                     },
                     actions = {
@@ -240,7 +244,8 @@ fun ListingScreen(vm: MainVm, screen: Screen) {
                     },
                 )
                 if (pasta != null && !selecionando) Breadcrumbs(vm, pasta, servidor?.name)
-                if (carregando && !itens.isNullOrEmpty()) LinearProgressIndicator(Modifier.fillMaxWidth().height(2.dp))
+                if (carregando && !itens.isNullOrEmpty()) LinearProgressIndicator(
+                    Modifier.fillMaxWidth().height(2.dp), color = Lx.ouro, trackColor = Color.Transparent)
                 else androidx.compose.foundation.layout.Spacer(Modifier.height(2.dp))
             }
         },
@@ -300,8 +305,8 @@ fun ListingScreen(vm: MainVm, screen: Screen) {
                     EmptyState(if (filtro.isNotBlank() || screen is Screen.Search) "Nada encontrado" else "Nenhum arquivo")
                 } }
                 Prefs.grid -> LazyVerticalGrid(
-                    GridCells.Adaptive(108.dp), state = screen.gridState, modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(10.dp),
+                    GridCells.Adaptive(112.dp), state = screen.gridState, modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(horizontal = 10.dp, vertical = 6.dp),
                 ) {
                     items(mostrados, key = { it.loc.toString() }) { e ->
                         FileCell(e, selecionando, sel.containsKey(e.loc), { abrir(e) }, { marcar(e) })
@@ -309,7 +314,7 @@ fun ListingScreen(vm: MainVm, screen: Screen) {
                 }
                 else -> LazyColumn(Modifier.fillMaxSize(), state = screen.listState, contentPadding = PaddingValues(bottom = 90.dp)) {
                     if (screen is Screen.Search && carregando) item {
-                        Text("Pesquisando…", Modifier.padding(20.dp, 8.dp), color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text("Pesquisando…", Modifier.padding(20.dp, 8.dp), color = Lx.tenue)
                     }
                     items(mostrados, key = { it.loc.toString() }) { e ->
                         val sub = if (screen is Screen.Folder) null else listOfNotNull(
@@ -359,7 +364,8 @@ private fun Breadcrumbs(vm: MainVm, loc: Loc, nomeServidor: String?) {
     val rolagem = rememberScrollState()
     LaunchedEffect(loc) { rolagem.scrollTo(Int.MAX_VALUE) }
     Row(
-        Modifier.fillMaxWidth().horizontalScroll(rolagem).padding(horizontal = 12.dp, vertical = 2.dp),
+        Modifier.fillMaxWidth().horizontalScroll(rolagem).padding(horizontal = 14.dp, vertical = 4.dp),
+        horizontalArrangement = Arrangement.spacedBy(3.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         cadeia.forEachIndexed { i, l ->
@@ -372,11 +378,15 @@ private fun Breadcrumbs(vm: MainVm, loc: Loc, nomeServidor: String?) {
             val ultimo = i == cadeia.lastIndex
             Text(
                 nome, fontSize = 13.sp, maxLines = 1,
-                color = if (ultimo) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
-                fontWeight = if (ultimo) FontWeight.SemiBold else FontWeight.Normal,
-                modifier = Modifier.tvFocus(10.dp).clickable(enabled = !ultimo) { vm.jump(l) }.padding(horizontal = 6.dp, vertical = 6.dp),
+                color = if (ultimo) Lx.ouro else Lx.apagado,
+                fontWeight = if (ultimo) FontWeight.SemiBold else FontWeight.Medium,
+                modifier = Modifier
+                    .then(if (ultimo) Modifier.vidro(12.dp, Lx.ouro.copy(alpha = 0.10f), Lx.ouro.copy(alpha = 0.28f))
+                          else Modifier.vidro(12.dp))
+                    .tvFocus(12.dp).clickable(enabled = !ultimo) { vm.jump(l) }
+                    .padding(horizontal = 10.dp, vertical = 5.dp),
             )
-            if (!ultimo) Icon(Icons.Filled.ChevronRight, null, Modifier.size(16.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
+            if (!ultimo) Icon(Icons.Filled.ChevronRight, null, Modifier.size(14.dp).padding(horizontal = 1.dp), tint = Lx.tenue)
         }
     }
 }
@@ -387,7 +397,7 @@ private fun BarAction(icon: ImageVector, label: String, enabled: Boolean = true,
         Modifier.tvFocus(14.dp).clickable(enabled = enabled, onClick = onClick).padding(horizontal = 10.dp, vertical = 8.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        val cor = if (enabled) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.35f)
+        val cor = if (enabled) Lx.texto else Lx.tenue
         Icon(icon, label, tint = cor)
         Text(label, fontSize = 11.sp, color = cor)
     }
@@ -401,7 +411,9 @@ private fun SelectionBar(
 ) {
     val noCofre = itens.all { it.loc is Loc.Vault }
     val temShare = itens.any { it.isShare }
-    Surface(color = MaterialTheme.colorScheme.surfaceContainer, shadowElevation = 6.dp) {
+    Box(Modifier.background(Lx.superficie).drawBehind {
+        drawLine(Lx.vidroBorda, androidx.compose.ui.geometry.Offset(0f, 0f), androidx.compose.ui.geometry.Offset(size.width, 0f), 1f)
+    }) {
         Row(Modifier.fillMaxWidth().navigationBarsPadding().padding(vertical = 4.dp), horizontalArrangement = Arrangement.SpaceEvenly) {
             BarAction(Icons.Filled.DriveFileMove, "Mover", !temShare, onMover)
             BarAction(Icons.Filled.ContentCopy, "Copiar", true, onCopiar)
@@ -425,18 +437,19 @@ private fun SelectionBar(
 
 @Composable
 fun PasteBar(clip: Clip, habilitado: Boolean, onCancelar: () -> Unit, onColar: (() -> Unit)?) {
-    Surface(color = MaterialTheme.colorScheme.surfaceContainer, shadowElevation = 6.dp) {
+    Box(Modifier.background(Lx.superficie).drawBehind {
+        drawLine(Lx.vidroBorda, androidx.compose.ui.geometry.Offset(0f, 0f), androidx.compose.ui.geometry.Offset(size.width, 0f), 1f)
+    }) {
         Column(Modifier.fillMaxWidth().navigationBarsPadding()) {
             Text(
                 "${if (clip.mover) "Mover" else "Copiar"} ${clip.itens.size} ${if (clip.itens.size == 1) "item" else "itens"} — abra a pasta de destino",
-                Modifier.padding(start = 20.dp, top = 10.dp, end = 20.dp), fontSize = 13.sp,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                Modifier.padding(start = 20.dp, top = 12.dp, end = 20.dp), fontSize = 13.sp, color = Lx.apagado,
             )
             Row(Modifier.fillMaxWidth().padding(8.dp), horizontalArrangement = Arrangement.SpaceEvenly) {
                 TextButton(onClick = onCancelar, Modifier.weight(1f).tvFocus(24.dp)) { Text("Cancelar") }
                 HorizontalDivider(Modifier.height(24.dp).size(1.dp, 24.dp).align(Alignment.CenterVertically))
                 TextButton(onClick = { onColar?.invoke() }, Modifier.weight(1f).tvFocus(24.dp), enabled = habilitado && onColar != null) {
-                    Text(if (clip.mover) "Mover para cá" else "Copiar para cá", fontWeight = FontWeight.SemiBold)
+                    Text(if (clip.mover) "Mover para cá" else "Copiar para cá", fontWeight = FontWeight.Bold, color = Lx.ouro)
                 }
             }
         }

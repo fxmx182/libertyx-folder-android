@@ -60,12 +60,12 @@ fun SettingsScreen(vm: MainVm, screen: Screen.Settings) {
     val nome = remember(versao) { if (Vault.tipo == Vault.Tipo.Pin) "PIN" else "senha" }
 
     Scaffold(
-        containerColor = MaterialTheme.colorScheme.background,
+        containerColor = Color.Transparent,
         topBar = {
             TopAppBar(
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background),
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent),
                 navigationIcon = { IconButton(modifier = Modifier.tvFocus(24.dp), onClick = { vm.pop() }) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Voltar") } },
-                title = { Text("Configurações", fontWeight = FontWeight.SemiBold) },
+                title = { Text("Configurações", fontWeight = FontWeight.Bold, letterSpacing = (-0.3).sp) },
             )
         },
     ) { pad ->
@@ -168,17 +168,17 @@ private fun Opcao(
     icon: ImageVector, titulo: String, sub: String,
     switch: Boolean? = null, perigo: Boolean = false, enabled: Boolean = true, onClick: () -> Unit,
 ) {
-    val cor = if (perigo) MaterialTheme.colorScheme.error else Color(0xFF0A6CFF)
+    val cor = if (perigo) MaterialTheme.colorScheme.error else Lx.ouro
     Row(
         Modifier.fillMaxWidth().tvFocus(24.dp).clickable(enabled = enabled, onClick = onClick)
             .padding(horizontal = 20.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        RowIcon(icon, if (enabled) cor else MaterialTheme.colorScheme.onSurfaceVariant)
+        RowIcon(icon, if (enabled) cor else Lx.tenue)
         Column(Modifier.padding(start = 16.dp).weight(1f)) {
             Text(titulo, style = MaterialTheme.typography.bodyLarge,
                 color = when { !enabled -> MaterialTheme.colorScheme.onSurfaceVariant; perigo -> MaterialTheme.colorScheme.error; else -> MaterialTheme.colorScheme.onSurface })
-            Text(sub, fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(sub, fontSize = 12.sp, lineHeight = 16.sp, color = Lx.tenue)
         }
         if (switch != null) Switch(switch, null, enabled = enabled, modifier = Modifier.padding(start = 12.dp))
     }
