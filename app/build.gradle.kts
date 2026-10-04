@@ -44,15 +44,10 @@ android {
             keyAlias = "arquivos"
             keyPassword = "arquivos123"
         }
-        // A chave dos APKs de TV instalados à mão (pasta dist/).
-        //
-        // A de cima, `arquivos`, foi marcada pelo Google Play Protect: em
-        // 2026-10-04 a TV do usuário recusou o APK como "app nocivo", e no
-        // emulador o veredito da nuvem veio REJECT. O mesmo APK, byte a byte,
-        // re-assinado com uma chave nova, passou — com ou sem a permissão de
-        // instalar apps. O problema é a reputação da chave, não o código.
-        // O celular continua na antiga: trocar exige desinstalar, e
-        // desinstalar apaga a pasta segura de quem tem uma.
+        // A chave dos APKs de TV instalados à mão (pasta dist/). Separada da
+        // do celular desde 2026-10-04; as duas estão registradas na
+        // Verificação de desenvolvedor Android do Play Console — sem isso,
+        // desde 30/09/2026 o Android recusa APK instalado por outro app.
         create("tv") {
             storeFile = rootProject.file("keystore/folder-tv.jks")
             storePassword = "foldertv2026"
@@ -191,33 +186,6 @@ val publicarApk = tasks.register<Copy>("publicarApk") {
     outputs.upToDateWhen { false }
     doFirst { rootProject.layout.projectDirectory.dir("dist").asFile.listFiles { f -> f.name.endsWith(".apk") }?.forEach { it.delete() } }
 }
-
-/**
- * Re-assina o APK de TV da pasta dist/ com o `apksigner` do SDK.
- *
- * Por quê: em 2026-10-04 o Google Play Protect passou a recusar o APK de TV
- * ("app nocivo bloqueado") na TV do usuário. Medido no emulador com a
- * verificação ligada: o MESMO conteúdo e a MESMA chave são recusados quando
- * assinados pelo Gradle e aceitos quando assinados pelo apksigner — 4 de 4
- * cada, inclusive só com o esquema v2 dos dois lados. Não depende da
- * permissão de instalar apps nem do R8. A causa exata dentro do arquivo do
- * Gradle não foi isolada; o veredito vem da nuvem do Google. Se um dia a TV
- * voltar a recusar, refazer o teste: `settings put global
- * verifier_verify_adb_installs 1` no emulador e `adb install`.
- */
-val assinarTv = tasks.register<Exec>("assinarTv") {
-    val apk = rootProject.layout.projectDirectory.file("dist/LibertyXFolder-TV.apk").asFile
-    val apksigner = android.sdkDirectory.resolve("build-tools/36.0.0/apksigner")
-    onlyIf { apk.exists() }
-    environment("PATH", "${System.getProperty("java.home")}/bin:${System.getenv("PATH")}")
-    commandLine(
-        apksigner.path, "sign",
-        "--ks", rootProject.file("keystore/folder-tv.jks").path,
-        "--ks-pass", "pass:foldertv2026", "--ks-key-alias", "foldertv",
-        apk.path,
-    )
-}
-publicarApk.configure { finalizedBy(assinarTv) }
 
 tasks.whenTaskAdded {
     if (name == "assembleRelease") finalizedBy(publicarApk)
