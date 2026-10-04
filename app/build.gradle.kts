@@ -49,10 +49,11 @@ android {
             keyAlias = "arquivos"
             keyPassword = "arquivos123"
         }
-        // A chave dos APKs de TV instalados à mão (pasta dist/). Separada da
-        // do celular desde 2026-10-04; as duas estão registradas na
-        // Verificação de desenvolvedor Android do Play Console — sem isso,
-        // desde 30/09/2026 o Android recusa APK instalado por outro app.
+        // A chave dos APKs instalados à mão (pasta dist/), celular e TV —
+        // registrada na Verificação de desenvolvedor Android do Play Console
+        // para com.mauricio.libertyx.files. Sem o registro, desde 30/09/2026
+        // o Android recusa APK instalado por outro app. A de cima (`arquivos`)
+        // só assinava o pacote antigo, com.mauricio.libertyx.folder.
         create("tv") {
             storeFile = rootProject.file("keystore/folder-tv.jks")
             storePassword = "foldertv2026"
@@ -86,7 +87,7 @@ android {
             buildConfigField("boolean", "PRO", "false")
             buildConfigField("boolean", "PASTA_SEGURA", "true")
             buildConfigField("boolean", "GUIA", "false")
-            signingConfig = signingConfigs.getByName("arquivos")
+            signingConfig = signingConfigs.getByName("tv")
         }
         create("tv") {
             dimension = "aparelho"
