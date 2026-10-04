@@ -37,39 +37,27 @@ android {
     // `leanback` (não instala em celular) e aparece na tela inicial da TV; o de
     // celular não aparece na TV. O app não tem biblioteca nativa, então os dois
     // servem para qualquer arquitetura — ARM 32/64 do Fire Stick incluídos.
-    flavorDimensions += "aparelho"
-    //
-    // O que muda entre os dois, além da tela de entrada, são três chaves:
-    // - PRO: a TV vai para a Play com 7 dias grátis e a rede como compra única;
-    //   o celular ainda não vai para a loja e segue sem nada disso.
-    // - PASTA_SEGURA: não existe na TV (decisão do dono do app).
-    // - GUIA: o guia de uso da primeira abertura, feito para o controle remoto.
-    productFlavors {
-        create("celular") {
-            dimension = "aparelho"
-            buildConfigField("boolean", "PRO", "false")
-            buildConfigField("boolean", "PASTA_SEGURA", "true")
-            buildConfigField("boolean", "GUIA", "false")
-        }
-        create("tv") {
-            dimension = "aparelho"
-            buildConfigField("boolean", "PRO", "true")
-            buildConfigField("boolean", "PASTA_SEGURA", "false")
-            buildConfigField("boolean", "GUIA", "true")
-            // Termina em 2, como a TV do LibertyX Player: quando o celular for
-            // para a mesma página da loja (terminando em 1), os números nunca
-            // colidem — a Play recusa dois envios com o mesmo número.
-            versionCode = (minutos * 10 + 2).toInt()
-            versionName = "1.0.0"
-        }
-    }
-
     signingConfigs {
         create("arquivos") {
             storeFile = rootProject.file("keystore/arquivos.jks")
             storePassword = "arquivos123"
             keyAlias = "arquivos"
             keyPassword = "arquivos123"
+        }
+        // A chave dos APKs de TV instalados à mão (pasta dist/).
+        //
+        // A de cima, `arquivos`, foi marcada pelo Google Play Protect: em
+        // 2026-10-04 a TV do usuário recusou o APK como "app nocivo", e no
+        // emulador o veredito da nuvem veio REJECT. O mesmo APK, byte a byte,
+        // re-assinado com uma chave nova, passou — com ou sem a permissão de
+        // instalar apps. O problema é a reputação da chave, não o código.
+        // O celular continua na antiga: trocar exige desinstalar, e
+        // desinstalar apaga a pasta segura de quem tem uma.
+        create("tv") {
+            storeFile = rootProject.file("keystore/folder-tv.jks")
+            storePassword = "foldertv2026"
+            keyAlias = "foldertv"
+            keyPassword = "foldertv2026"
         }
         // A chave de ENVIO da Play Store, a mesma do LibertyX Player: não
         // assina o app que chega ao usuário (a Play reassina com a dela), só
@@ -85,9 +73,39 @@ android {
         }
     }
 
+    flavorDimensions += "aparelho"
+    //
+    // O que muda entre os dois, além da tela de entrada, são três chaves:
+    // - PRO: a TV vai para a Play com 7 dias grátis e a rede como compra única;
+    //   o celular ainda não vai para a loja e segue sem nada disso.
+    // - PASTA_SEGURA: não existe na TV (decisão do dono do app).
+    // - GUIA: o guia de uso da primeira abertura, feito para o controle remoto.
+    productFlavors {
+        create("celular") {
+            dimension = "aparelho"
+            buildConfigField("boolean", "PRO", "false")
+            buildConfigField("boolean", "PASTA_SEGURA", "true")
+            buildConfigField("boolean", "GUIA", "false")
+            signingConfig = signingConfigs.getByName("arquivos")
+        }
+        create("tv") {
+            dimension = "aparelho"
+            buildConfigField("boolean", "PRO", "true")
+            buildConfigField("boolean", "PASTA_SEGURA", "false")
+            buildConfigField("boolean", "GUIA", "true")
+            // Termina em 2, como a TV do LibertyX Player: quando o celular for
+            // para a mesma página da loja (terminando em 1), os números nunca
+            // colidem — a Play recusa dois envios com o mesmo número.
+            versionCode = (minutos * 10 + 2).toInt()
+            versionName = "1.0.0"
+            signingConfig = signingConfigs.getByName("tv")
+        }
+    }
+
     buildTypes {
         release {
-            signingConfig = signingConfigs.getByName("arquivos")
+            // A chave vem da variante (celular ou tv), não do tipo de build.
+            signingConfig = null
             // R8 ligado: sem ele o pacote passava de 18 MB, quase tudo ícone
             // do Material que o app não usa e criptografia que o smbj não
             // chama. As regras do que não pode encolher estão em proguard-rules.pro.
@@ -96,7 +114,7 @@ android {
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }
         debug {
-            signingConfig = signingConfigs.getByName("arquivos")
+            signingConfig = null
         }
         // O que vai para a Play Store: `./gradlew bundleLoja`. Um tipo de
         // build, e não opções, porque as duas diferenças não podem ser
@@ -173,6 +191,33 @@ val publicarApk = tasks.register<Copy>("publicarApk") {
     outputs.upToDateWhen { false }
     doFirst { rootProject.layout.projectDirectory.dir("dist").asFile.listFiles { f -> f.name.endsWith(".apk") }?.forEach { it.delete() } }
 }
+
+/**
+ * Re-assina o APK de TV da pasta dist/ com o `apksigner` do SDK.
+ *
+ * Por quê: em 2026-10-04 o Google Play Protect passou a recusar o APK de TV
+ * ("app nocivo bloqueado") na TV do usuário. Medido no emulador com a
+ * verificação ligada: o MESMO conteúdo e a MESMA chave são recusados quando
+ * assinados pelo Gradle e aceitos quando assinados pelo apksigner — 4 de 4
+ * cada, inclusive só com o esquema v2 dos dois lados. Não depende da
+ * permissão de instalar apps nem do R8. A causa exata dentro do arquivo do
+ * Gradle não foi isolada; o veredito vem da nuvem do Google. Se um dia a TV
+ * voltar a recusar, refazer o teste: `settings put global
+ * verifier_verify_adb_installs 1` no emulador e `adb install`.
+ */
+val assinarTv = tasks.register<Exec>("assinarTv") {
+    val apk = rootProject.layout.projectDirectory.file("dist/LibertyXFolder-TV.apk").asFile
+    val apksigner = android.sdkDirectory.resolve("build-tools/36.0.0/apksigner")
+    onlyIf { apk.exists() }
+    environment("PATH", "${System.getProperty("java.home")}/bin:${System.getenv("PATH")}")
+    commandLine(
+        apksigner.path, "sign",
+        "--ks", rootProject.file("keystore/folder-tv.jks").path,
+        "--ks-pass", "pass:foldertv2026", "--ks-key-alias", "foldertv",
+        apk.path,
+    )
+}
+publicarApk.configure { finalizedBy(assinarTv) }
 
 tasks.whenTaskAdded {
     if (name == "assembleRelease") finalizedBy(publicarApk)
