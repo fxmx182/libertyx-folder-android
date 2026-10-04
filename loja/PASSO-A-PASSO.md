@@ -4,6 +4,20 @@ O que já está pronto no código está marcado ✅. O resto é feito no navegad
 [Play Console](https://play.google.com/console), pela conta do dono — a mesma
 conta de desenvolvedor do LibertyX Player serve (não paga de novo).
 
+## Estado no Play Console (2026-10-04)
+
+- **App em uso: LibertyX Folder com o pacote `com.mauricio.libertyx.files`**
+  (ID 4973238286129143138). O primeiro app criado, com o pacote
+  `com.mauricio.libertyx.folder` (ID 4972154570058753375), foi abandonado: o
+  Google Play Protect marcou aquele pacote (ver `APELACAO-PLAY-PROTECT.md`).
+- Feito no app novo: formato Android TV; teste interno publicado (versão
+  3979542, lista de testadores "Eu"); produto `libertyx_folder_pro` ativo a
+  US$ 4,99; página da loja em português com textos, ícone, destaque, banner de TV
+  e capturas (TV, e as mesmas nos campos obrigatórios de celular e tablet).
+- Falta: traduções da página (en/es), endereço público da política de
+  privacidade, questionários de "Conteúdo do app" e o teste fechado.
+- **No Console em português, preço com vírgula:** "4.99" vira 499.
+
 ## O modelo
 
 - **Só a TV** vai para a loja agora. O app de celular fica de fora (o
@@ -77,8 +91,6 @@ conta de desenvolvedor do LibertyX Player serve (não paga de novo).
        **gerenciador de arquivos**.
      - *Fotos e vídeos* (`READ_MEDIA_IMAGES/VIDEO`): gerenciador de arquivos;
        usado quando a TV não tem a tela de acesso a todos os arquivos.
-     - *Instalar pacotes* (`REQUEST_INSTALL_PACKAGES`): gerenciador de
-       arquivos que abre `.apk` escolhido pelo usuário.
      - *Serviço em primeiro plano* (`dataSync`): "copiar e mover arquivos entre
        a TV e computadores da rede, iniciado pelo usuário, com progresso".
        Pede um vídeo curto: grave a TV copiando uma pasta e suba no YouTube
