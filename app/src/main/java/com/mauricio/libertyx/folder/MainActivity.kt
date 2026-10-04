@@ -35,6 +35,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -82,7 +83,13 @@ class MainActivity : ComponentActivity() {
                     Modifier.fillMaxSize().brilhoDeFundo()
                         .then(if (Device.isTv) Modifier.padding(horizontal = 48.dp, vertical = 24.dp) else Modifier)
                 ) {
-                    if (!temAcesso) PedirAcesso() else {
+                    val proEstado by com.mauricio.libertyx.folder.pro.Pro.estado.collectAsState()
+                    val redeLiberada = proEstado !is com.mauricio.libertyx.folder.pro.Pro.Estado.Expirado
+                    // O guia vem antes do pedido de permissão, como no LibertyX
+                    // Player: a última página dele avisa do pedido.
+                    if (BuildConfig.GUIA && !com.mauricio.libertyx.folder.ui.Prefs.guiaVisto) {
+                        com.mauricio.libertyx.folder.ui.GuiaScreen { com.mauricio.libertyx.folder.ui.Prefs.guiaVisto = true }
+                    } else if (!temAcesso) PedirAcesso() else {
                         BackHandler(vm.stack.size > 1) { vm.pop() }
                         // Com "mover/copiar" pendente, voltar no início cancela em vez de fechar o app.
                         BackHandler(vm.stack.size == 1 && vm.clip != null) { vm.clip = null }
@@ -101,7 +108,13 @@ class MainActivity : ComponentActivity() {
                                         }
                                     }
                                 }
-                                is Screen.Network -> NetworkScreen(vm, s)
+                                // Rede travada (teste encerrado, sem compra): a tela
+                                // do Pro no lugar, venha a pessoa por onde vier.
+                                is Screen.Network -> if (redeLiberada) NetworkScreen(vm, s) else com.mauricio.libertyx.folder.ui.ProScreen(vm)
+                                is Screen.Folder -> if (s.loc is com.mauricio.libertyx.folder.fs.Loc.Smb && !redeLiberada)
+                                    com.mauricio.libertyx.folder.ui.ProScreen(vm) else ListingScreen(vm, s)
+                                is Screen.Pro -> com.mauricio.libertyx.folder.ui.ProScreen(vm)
+                                is Screen.Guia -> com.mauricio.libertyx.folder.ui.GuiaScreen(primeiraVez = false) { vm.pop() }
                                 is Screen.Settings -> com.mauricio.libertyx.folder.ui.SettingsScreen(vm, s)
                                 is Screen.Pin -> com.mauricio.libertyx.folder.ui.PinScreen(vm, s)
                                 else -> ListingScreen(vm, s)

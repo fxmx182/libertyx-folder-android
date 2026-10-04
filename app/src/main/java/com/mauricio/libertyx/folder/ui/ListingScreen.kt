@@ -425,7 +425,9 @@ private fun SelectionBar(
                     DropdownMenuItem({ Text("Renomear") }, { setMenu(false); onRenomear() }, enabled = itens.size == 1 && !temShare)
                     DropdownMenuItem({ Text("Abrir com") }, { setMenu(false); onAbrirCom() }, enabled = itens.size == 1 && !itens[0].isDir)
                     // Pasta oculta e bloqueada: a opção nem aparece, para não denunciar que ela existe.
-                    if (noCofre || com.mauricio.libertyx.folder.vault.Vault.visivel || com.mauricio.libertyx.folder.vault.Vault.unlocked.value)
+                    // Na TV não há pasta segura: só "retirar", para quem tinha uma de antes.
+                    if (noCofre || (com.mauricio.libertyx.folder.BuildConfig.PASTA_SEGURA &&
+                            (com.mauricio.libertyx.folder.vault.Vault.visivel || com.mauricio.libertyx.folder.vault.Vault.unlocked.value)))
                     DropdownMenuItem({ Text(if (noCofre) "Retirar da pasta segura" else "Mover para pasta segura") },
                         { setMenu(false); onCofre() }, enabled = noCofre || (!temShare && itens.none { it.loc is Loc.Vault }))
                     DropdownMenuItem({ Text("Detalhes") }, { setMenu(false); onDetalhes() })

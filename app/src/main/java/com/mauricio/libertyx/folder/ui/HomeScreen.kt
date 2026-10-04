@@ -105,6 +105,12 @@ fun HomeScreen(vm: MainVm, screen: Screen.Home) {
     val cofreAberto by com.mauricio.libertyx.folder.vault.Vault.unlocked.collectAsState()
     // Oculta: some do início enquanto bloqueada; aberta, continua à mão.
     val cofreVisivel = remember(versaoCofre, cofreAberto) { com.mauricio.libertyx.folder.vault.Vault.visivel || cofreAberto }
+    // A rede é o Pro (na TV): terminado o teste, os computadores continuam
+    // aparecendo — o que se trava é abrir, e quem tenta abrir vê o porquê.
+    val proEstado by com.mauricio.libertyx.folder.pro.Pro.estado.collectAsState()
+    fun rede(acao: () -> Unit) {
+        if (proEstado !is com.mauricio.libertyx.folder.pro.Pro.Estado.Expirado) acao() else vm.push(Screen.Pro())
+    }
 
     LaunchedEffect(versao) {
         withContext(Dispatchers.IO) {
@@ -131,11 +137,13 @@ fun HomeScreen(vm: MainVm, screen: Screen.Home) {
                     },
                     style = Lx.titulao, modifier = Modifier.padding(start = 12.dp).weight(1f),
                 )
-                Box(Modifier.size(42.dp).clip(CircleShape).vidro(21.dp), contentAlignment = Alignment.Center) {
-                    IconButton(modifier = Modifier.tvFocus(21.dp), onClick = { vm.push(Screen.Settings()) }) {
-                        Icon(Icons.Filled.Settings, "Configurações", tint = Lx.apagado)
-                    }
-                }
+                // O vidro no próprio botão, e não numa caixa recortada em volta:
+                // o recorte comia a borda dourada do foco, e na TV a engrenagem
+                // ficava sem realce nenhum.
+                IconButton(
+                    modifier = Modifier.size(44.dp).tvFocus(22.dp).vidro(22.dp),
+                    onClick = { vm.push(Screen.Settings()) },
+                ) { Icon(Icons.Filled.Settings, "Configurações", tint = Lx.apagado) }
             }
         }
         item {
@@ -230,7 +238,7 @@ fun HomeScreen(vm: MainVm, screen: Screen.Home) {
         }
 
         // Oculta nas configurações: some do início (continua em Configurações).
-        if (cofreVisivel) item {
+        if (com.mauricio.libertyx.folder.BuildConfig.PASTA_SEGURA && cofreVisivel) item {
             val aberto by com.mauricio.libertyx.folder.vault.Vault.unlocked.collectAsState()
             val vv by com.mauricio.libertyx.folder.vault.Vault.versao.collectAsState()
             Column(
@@ -250,7 +258,9 @@ fun HomeScreen(vm: MainVm, screen: Screen.Home) {
 
         item {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                SectionTitle("Rede", Modifier.weight(1f))
+                SectionTitle("Rede")
+                if (com.mauricio.libertyx.folder.BuildConfig.PRO) SeloDoPro(Modifier.padding(top = 14.dp))
+                Spacer(Modifier.weight(1f))
                 if (buscando) CircularProgressIndicator(Modifier.padding(top = 16.dp, end = 12.dp).size(16.dp), strokeWidth = 2.dp, color = Lx.ouro)
                 else IconButton(onClick = { scope.launch { Descobertas.buscar(ctx.applicationContext) } }, Modifier.padding(top = 14.dp).tvFocus(24.dp)) {
                     Icon(Icons.Filled.Refresh, "Buscar de novo", tint = Lx.apagado)
@@ -261,13 +271,13 @@ fun HomeScreen(vm: MainVm, screen: Screen.Home) {
             Card(Modifier.padding(horizontal = 16.dp)) {
                 servidores.forEach { s ->
                     NetRow(Icons.Filled.Lan, s.name, s.displayHost + if (s.isGuest) " · convidado" else if (s.username.isNotBlank()) " · ${s.username}" else "") {
-                        vm.push(Screen.Folder(Loc.Smb(s.id)))
+                        rede { vm.push(Screen.Folder(Loc.Smb(s.id))) }
                     }
                 }
                 val salvos = servidores.map { it.host }.toSet()
                 achados.filter { it.host !in salvos }.forEach { a ->
                     NetRow(Icons.Filled.Computer, a.nome, if (a.nome != a.host) "${a.host} · encontrado na rede" else "Encontrado na rede", destaque = true) {
-                        servidorNovo = ServerDraft(nome = a.nome, host = a.host)
+                        rede { servidorNovo = ServerDraft(nome = a.nome, host = a.host) }
                     }
                 }
                 if (servidores.isEmpty() && achados.isEmpty()) {
@@ -276,7 +286,7 @@ fun HomeScreen(vm: MainVm, screen: Screen.Home) {
                         Modifier.padding(horizontal = 20.dp, vertical = 12.dp), color = Lx.tenue, fontSize = 14.sp,
                     )
                 }
-                NetRow(Icons.Filled.Add, "Servidores de rede", "Procurar e adicionar servidor SMB") { vm.push(Screen.Network()) }
+                NetRow(Icons.Filled.Add, "Servidores de rede", "Procurar e adicionar servidor SMB") { rede { vm.push(Screen.Network()) } }
             }
         }
     }

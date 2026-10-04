@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Android 11 e antes. Só a data do início do teste do Pro (e se foi comprado)
+     vai para o backup: reinstalar na mesma conta não recomeça os 7 dias.
+     Nada mais sai do aparelho — senhas dos servidores ficam de fora. -->
+<full-backup-content>
+    <include domain="sharedpref" path="pro.xml" />
+</full-backup-content>

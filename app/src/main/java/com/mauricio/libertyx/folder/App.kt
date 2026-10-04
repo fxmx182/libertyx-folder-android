@@ -10,6 +10,8 @@ class App : Application(), SingletonImageLoader.Factory {
     override fun onCreate() {
         super.onCreate()
         instance = this
+        com.mauricio.libertyx.folder.pro.Pro.iniciar(this)
+        if (BuildConfig.PRO) com.mauricio.libertyx.folder.pro.Loja.iniciar(this)
     }
 
     override fun newImageLoader(context: PlatformContext): ImageLoader =

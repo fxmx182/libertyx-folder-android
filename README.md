@@ -19,13 +19,36 @@ A mesma linguagem do LibertyX Player, e a mesma família de marca: **ouro sobre 
 
 ## TV (Google TV e Fire Stick)
 
-Mesmo código, dois APKs (`productFlavors`): `dist/LibertyXFolder-Celular.apk` e `dist/LibertyXFolder-TV.apk`. O de TV declara `leanback` obrigatório, banner e `LEANBACK_LAUNCHER`. Sem biblioteca nativa, então serve a ARM 32/64 (Fire Stick) e x86. Os dois têm o mesmo pacote: um substitui o outro. O `leanback` obrigatório só filtra na loja; `adb install` instala qualquer um em qualquer aparelho.
+Mesmo código, dois APKs (`productFlavors`): `dist/LibertyXFolder-Celular.apk` e `dist/LibertyXFolder-TV.apk`. O que muda entre eles, além da entrada na tela inicial, são três chaves de `BuildConfig` definidas em `app/build.gradle.kts`:
+
+| Chave | Celular | TV | O que faz |
+|---|---|---|---|
+| `PRO` | não | sim | 7 dias grátis e a rede como compra única (`pro/Pro.kt`, `pro/Loja.kt` só na TV) |
+| `PASTA_SEGURA` | sim | não | a TV não tem pasta segura; quem tinha uma acha em Configurações como esvaziá-la |
+| `GUIA` | não | sim | o guia de uso de 10 páginas (`ui/Guia.kt`) na primeira abertura |
+
+A biblioteca de cobrança entra só no APK de TV (`tvImplementation`); no celular, `pro/Loja.kt` é um esboço com a mesma forma. O de TV declara `leanback` obrigatório, banner e `LEANBACK_LAUNCHER`. Sem biblioteca nativa, então serve a ARM 32/64 (Fire Stick) e x86. Os dois têm o mesmo pacote: um substitui o outro. O `leanback` obrigatório só filtra na loja; `adb install` instala qualquer um em qualquer aparelho.
 
 No controle remoto: realce de foco forte (`Tv.kt`), setas trocam de campo nos formulários, busca abre diálogo em vez de campo (focar campo abre o teclado), PIN aceita os números do controle pelo teclado do sistema, margem de segurança de 48 dp, sem "puxar para atualizar" (use Mais → Atualizar). Toque longo no botão central seleciona.
 
 O painel de progresso (copiar/mover/excluir) **some sozinho** 3,5 s depois de terminar bem: no controle remoto, descer até um "OK" que flutua sobre a lista é quase impossível, e um "Concluído" não tem nada a decidir. Só fica na tela o que precisa ser lido — erro ou cancelamento —, e aí, na TV, o painel chama o foco para si. Voltar também fecha o painel terminado, em qualquer aparelho.
 
 Fire TV sem a tela de "acesso a todos os arquivos": o app pede acesso às mídias e mostra o comando `adb shell appops set com.mauricio.libertyx.folder MANAGE_EXTERNAL_STORAGE allow`. SMB funciona sem permissão nenhuma ("Só usar servidores de rede").
+
+## LibertyX Folder Pro (TV)
+
+O modelo do LibertyX Player. Os arquivos da TV são grátis para sempre; a **rede** (servidores SMB, a busca automática, abrir e copiar da rede) vem liberada nos 7 primeiros dias e depois pede o Pro, compra única `libertyx_folder_pro`. O teste é contado pelo app (a Play não tem teste para compra única); a data vai no backup do Android — só ela, ver `src/tv/res/xml/backup_tv.xml` —, para reinstalar não recomeçar.
+
+Terminado o teste, os computadores continuam aparecendo na tela inicial: o que trava é abrir, e quem tenta abrir cai na tela do Pro (`ui/ProScreen.kt`; o desvio fica no roteamento da `MainActivity`, então vale venha a pessoa por onde vier).
+
+- `dist/` (compilado aqui): Pro **liberado** (`BuildConfig.LIBERADO`).
+- `./gradlew bundleLoja` → `dist/play/LibertyXFolder-TV.aab`, assinado com a chave de envio, Pro travado.
+- Testar a compra/o teste aqui: `-PlibertyxLoja` (trava) e `-PlibertyxDiasDeTeste=0` (teste vencido).
+- Lançamento: `loja/PASSO-A-PASSO.md`, `loja/FICHA.md`, imagens em `loja/imagens/`, política em `PRIVACY.md`.
+
+## Guia de uso (TV)
+
+`ui/Guia.kt`: dez páginas, cada uma com uma cena do próprio app encolhida e animada ao lado de um texto curto — controle remoto, tela inicial, pastas, seleção, copiar/mover, rede, assistir sem baixar, pesquisa e o Pro. ◀ ▶ mudam de página de qualquer lugar (os botões ficam em coluna para as setas laterais não serem deles); Voltar volta uma página. Aparece antes do pedido de permissão; flag `guia.visto.v1`. **Ao mudar uma ferramenta, mude a cena e o texto dela no guia.**
 
 ## Pasta segura
 

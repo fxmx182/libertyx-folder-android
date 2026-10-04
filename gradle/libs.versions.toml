@@ -10,6 +10,7 @@ securityCrypto = "1.1.0"
 coil = "3.3.0"
 smbj = "0.14.0"
 dcerpc = "0.12.13"
+billing = "8.3.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -25,6 +26,7 @@ coil-compose = { group = "io.coil-kt.coil3", name = "coil-compose", version.ref 
 coil-video = { group = "io.coil-kt.coil3", name = "coil-video", version.ref = "coil" }
 smbj = { group = "com.hierynomus", name = "smbj", version.ref = "smbj" }
 dcerpc = { group = "com.rapid7.client", name = "dcerpc", version.ref = "dcerpc" }
+billing = { group = "com.android.billingclient", name = "billing-ktx", version.ref = "billing" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

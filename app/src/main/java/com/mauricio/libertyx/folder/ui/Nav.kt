@@ -26,6 +26,10 @@ sealed class Screen {
     class Network : Screen()
     class Settings : Screen()
     class Pin(val modo: PinModo, val depois: (MainVm) -> Unit) : Screen()
+    /** A tela de compra do Pro (só na TV). */
+    class Pro : Screen()
+    /** O guia de uso, revisto pelas Configurações. */
+    class Guia : Screen()
 }
 
 /** Itens escolhidos em "Mover"/"Copiar", esperando a pasta de destino. */
@@ -70,6 +74,8 @@ object Prefs {
     var asc by pref(sp.getBoolean("asc", true)) { sp.edit().putBoolean("asc", it).apply() }
     var grid by pref(sp.getBoolean("grid", false)) { sp.edit().putBoolean("grid", it).apply() }
     var hidden by pref(sp.getBoolean("hidden", false)) { sp.edit().putBoolean("hidden", it).apply() }
+    /** O guia de uso da primeira abertura já foi visto (ou pulado). */
+    var guiaVisto by pref(sp.getBoolean("guia.visto.v1", false)) { sp.edit().putBoolean("guia.visto.v1", it).apply() }
 
     private fun <T> pref(inicial: T, salvar: (T) -> Unit) = object : kotlin.properties.ReadWriteProperty<Any?, T> {
         val st = mutableStateOf(inicial)

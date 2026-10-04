@@ -12,7 +12,8 @@ dentro do app, sobre qualquer fundo.
 Escreve em app/src/main/res e app/src/tv/res:
   drawable/ic_launcher_{foreground,background,monochrome}.xml, drawable/ic_marca.xml
   tv/drawable-{mdpi,xhdpi}/tv_banner.png     (a faixa da tela inicial da TV)
-e Scripts/play-512.png, o ícone quadrado para a loja.
+e Scripts/play-512.png, o ícone quadrado para a loja, e em loja/imagens a imagem de
+destaque (1024×500) e o banner da faixa de TV (1280×720) da Play Store.
 
 minSdk é 26, então não há mipmap PNG a gerar: todo aparelho aqui tem ícone
 adaptativo.
@@ -214,6 +215,12 @@ def banner(W, H, slogan=None):
         d.text((w // 2, int(h * 0.9)), slogan, font=f3, fill=(0xFB, 0xC5, 0x01, 230), anchor="ms")
     return fundo.resize((W, H), Image.LANCZOS).convert("RGB")
 
+
+# Play Store: a imagem de destaque e o banner da faixa de Android TV.
+LOJA = os.path.join(AQUI, "../loja/imagens")
+os.makedirs(LOJA, exist_ok=True)
+banner(1024, 500, "Seus arquivos e a sua rede, na TV.").save(os.path.join(LOJA, "destaque-1024x500-pt.png"), optimize=True)
+banner(1280, 720).save(os.path.join(LOJA, "tv-banner-1280x720.png"), optimize=True)
 
 for pasta_dens, (W, H) in {"drawable-mdpi": (320, 180), "drawable-xhdpi": (640, 360)}.items():
     os.makedirs(os.path.join(TV, pasta_dens), exist_ok=True)

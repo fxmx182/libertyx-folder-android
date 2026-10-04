@@ -46,7 +46,11 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.mauricio.libertyx.folder.BuildConfig
+import com.mauricio.libertyx.folder.pro.Pro
 import com.mauricio.libertyx.folder.vault.Vault
+import androidx.compose.material.icons.filled.School
+import androidx.compose.material.icons.filled.WorkspacePremium
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -70,6 +74,56 @@ fun SettingsScreen(vm: MainVm, screen: Screen.Settings) {
         },
     ) { pad ->
         LazyColumn(Modifier.fillMaxSize().padding(pad), contentPadding = PaddingValues(bottom = 48.dp)) {
+            if (BuildConfig.PRO) {
+                item { SectionTitle("LibertyX Pro") }
+                item {
+                    val pro by Pro.estado.collectAsState()
+                    Card(Modifier.padding(horizontal = 16.dp)) {
+                        Opcao(
+                            Icons.Filled.WorkspacePremium, "LibertyX Pro",
+                            when (val e = pro) {
+                                Pro.Estado.Comprado -> "Ativo — a rede está liberada para sempre"
+                                is Pro.Estado.Teste -> "Teste grátis: ${e.diasRestantes} dia${if (e.diasRestantes == 1) "" else "s"} com a rede liberada"
+                                Pro.Estado.Expirado -> "Teste encerrado — libere a rede com uma compra única"
+                            },
+                        ) { vm.push(Screen.Pro()) }
+                    }
+                }
+            }
+            if (BuildConfig.GUIA) {
+                item { SectionTitle("Ajuda") }
+                item {
+                    Card(Modifier.padding(horizontal = 16.dp)) {
+                        Opcao(Icons.Filled.School, "Guia de uso", "Todas as ferramentas, uma por página, no controle remoto") {
+                            vm.push(Screen.Guia())
+                        }
+                    }
+                }
+            }
+            // Na TV não existe pasta segura. Quem criou uma numa versão de
+            // antes ainda acha aqui como tirar os arquivos e apagá-la — o
+            // recurso sumir não pode levar os arquivos de alguém junto.
+            if (!BuildConfig.PASTA_SEGURA) {
+                if (existe) {
+                    item { SectionTitle("Pasta segura antiga") }
+                    item {
+                        Card(Modifier.padding(horizontal = 16.dp)) {
+                            Opcao(Icons.Filled.FolderOpen, "Abrir para retirar os arquivos",
+                                "A TV não tem mais pasta segura: selecione tudo e use Mais › Retirar") { abrirPastaSegura(vm) }
+                            Opcao(Icons.Filled.DeleteForever, "Excluir pasta segura",
+                                "Apaga de vez o que sobrou nela e ${if (nome == "PIN") "o PIN" else "a senha"}",
+                                perigo = true) { dialogo = "excluir" }
+                        }
+                    }
+                }
+                item {
+                    Text(
+                        "LibertyX Folder ${BuildConfig.VERSION_NAME}",
+                        Modifier.padding(start = 26.dp, top = 28.dp), fontSize = 12.sp, color = Lx.tenue,
+                    )
+                }
+                return@LazyColumn
+            }
             item { SectionTitle("Pasta segura") }
             item {
                 Card(Modifier.padding(horizontal = 16.dp)) {

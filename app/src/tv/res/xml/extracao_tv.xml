@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Android 12 em diante: o mesmo que backup_tv.xml. -->
+<data-extraction-rules>
+    <cloud-backup>
+        <include domain="sharedpref" path="pro.xml" />
+    </cloud-backup>
+    <device-transfer>
+        <include domain="sharedpref" path="pro.xml" />
+    </device-transfer>
+</data-extraction-rules>
