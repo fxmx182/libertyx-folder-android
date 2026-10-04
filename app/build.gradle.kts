@@ -88,7 +88,12 @@ android {
     buildTypes {
         release {
             signingConfig = signingConfigs.getByName("arquivos")
-            isMinifyEnabled = false
+            // R8 ligado: sem ele o pacote passava de 18 MB, quase tudo ícone
+            // do Material que o app não usa e criptografia que o smbj não
+            // chama. As regras do que não pode encolher estão em proguard-rules.pro.
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }
         debug {
             signingConfig = signingConfigs.getByName("arquivos")
