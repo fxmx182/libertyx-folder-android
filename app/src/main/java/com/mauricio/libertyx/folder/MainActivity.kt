@@ -1,6 +1,7 @@
 package com.mauricio.libertyx.folder
 
 import android.Manifest
+import androidx.compose.ui.res.stringResource
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
@@ -203,21 +204,21 @@ class MainActivity : ComponentActivity() {
         ) {
             androidx.compose.foundation.Image(
                 androidx.compose.ui.res.painterResource(R.drawable.ic_marca), null, Modifier.size(88.dp))
-            Text("Permitir acesso aos arquivos", style = MaterialTheme.typography.headlineSmall,
+            Text(stringResource(R.string.perm_titulo), style = MaterialTheme.typography.headlineSmall,
                 fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
                 modifier = Modifier.padding(top = 20.dp), textAlign = TextAlign.Center)
             Text(
-                "Para mostrar, copiar e organizar os arquivos do aparelho, o LibertyX Folder precisa do acesso a todos os arquivos.",
+                stringResource(R.string.perm_texto),
                 textAlign = TextAlign.Center, color = com.mauricio.libertyx.folder.ui.Lx.apagado, modifier = Modifier.padding(top = 12.dp),
             )
             if (semTelaDeAcesso) Text(
-                "Este aparelho não tem a tela de acesso a todos os arquivos. Pelo computador, libere com:\n" +
+                stringResource(R.string.perm_sem_tela) + "\n" +
                     "adb shell appops set $packageName MANAGE_EXTERNAL_STORAGE allow",
                 textAlign = TextAlign.Center, color = MaterialTheme.colorScheme.error, modifier = Modifier.padding(top = 16.dp),
             )
             val foco = androidx.compose.runtime.remember { androidx.compose.ui.focus.FocusRequester() }
-            Button(onClick = { pedir() }, Modifier.padding(top = 28.dp).widthIn(max = 480.dp).fillMaxWidth().focusRequester(foco).tvFocus(24.dp)) { Text("Permitir") }
-            TextButton(onClick = { vm.push(Screen.Network()); temAcesso = true }, Modifier.tvFocus(24.dp)) { Text("Só usar servidores de rede") }
+            Button(onClick = { pedir() }, Modifier.padding(top = 28.dp).widthIn(max = 480.dp).fillMaxWidth().focusRequester(foco).tvFocus(24.dp)) { Text(stringResource(R.string.perm_permitir)) }
+            TextButton(onClick = { vm.push(Screen.Network()); temAcesso = true }, Modifier.tvFocus(24.dp)) { Text(stringResource(R.string.perm_so_rede)) }
             if (Device.isTv) androidx.compose.runtime.LaunchedEffect(Unit) { runCatching { foco.requestFocus() } }
         }
     }

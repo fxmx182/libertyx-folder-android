@@ -1,6 +1,8 @@
 package com.mauricio.libertyx.folder.smb
 
 import android.util.Log
+import com.mauricio.libertyx.folder.Textos
+import com.mauricio.libertyx.folder.R
 import com.hierynomus.msdtyp.AccessMask
 import com.hierynomus.msfscc.FileAttributes
 import com.hierynomus.mserref.NtStatus
@@ -85,7 +87,7 @@ object SmbFs : Fs {
     }
 
     private fun server(id: String): SmbServer =
-        SmbServerStore.get(App.instance).byId(id) ?: throw IOException("Servidor removido")
+        SmbServerStore.get(App.instance).byId(id) ?: throw IOException(Textos.get(R.string.smb_removido))
 
     /** Conecta e autentica — usado também pelo "testar" do cadastro. */
     fun openSession(server: SmbServer, password: String): Session {
@@ -114,7 +116,7 @@ object SmbFs : Fs {
                 erro = e; runCatching { conn.close(true) }
             }
         }
-        throw erro ?: IOException("Falha de autenticação")
+        throw erro ?: IOException(Textos.get(R.string.smb_falha_auth))
     }
 
     private fun session(serverId: String): Session {
@@ -130,7 +132,7 @@ object SmbFs : Fs {
         val key = "${loc.serverId}/${loc.share.lowercase()}"
         shares[key]?.let { if (it.isConnected) return it }
         val d = session(loc.serverId).connectShare(loc.share) as? DiskShare
-            ?: throw IOException("${loc.share} não é uma pasta compartilhada")
+            ?: throw IOException(Textos.get(R.string.smb_nao_compartilhada, loc.share))
         shares[key] = d
         return d
     }
@@ -149,15 +151,15 @@ object SmbFs : Fs {
 
     private fun traduzir(e: SMBApiException): IOException = IOException(
         when (e.status) {
-            NtStatus.STATUS_LOGON_FAILURE -> "Usuário ou senha incorretos"
-            NtStatus.STATUS_ACCESS_DENIED -> "Acesso negado"
-            NtStatus.STATUS_BAD_NETWORK_NAME -> "Compartilhamento não encontrado"
-            NtStatus.STATUS_OBJECT_NAME_NOT_FOUND, NtStatus.STATUS_OBJECT_PATH_NOT_FOUND -> "Arquivo não encontrado"
-            NtStatus.STATUS_OBJECT_NAME_COLLISION -> "Já existe um item com esse nome"
-            NtStatus.STATUS_SHARING_VIOLATION -> "O arquivo está em uso no servidor"
-            NtStatus.STATUS_DIRECTORY_NOT_EMPTY -> "A pasta não está vazia"
-            NtStatus.STATUS_DISK_FULL -> "Disco do servidor cheio"
-            else -> "Erro do servidor: ${e.status}"
+            NtStatus.STATUS_LOGON_FAILURE -> Textos.get(R.string.smb_senha_errada)
+            NtStatus.STATUS_ACCESS_DENIED -> Textos.get(R.string.smb_acesso_negado)
+            NtStatus.STATUS_BAD_NETWORK_NAME -> Textos.get(R.string.smb_share_nao_achado)
+            NtStatus.STATUS_OBJECT_NAME_NOT_FOUND, NtStatus.STATUS_OBJECT_PATH_NOT_FOUND -> Textos.get(R.string.err_arquivo_nao_achado)
+            NtStatus.STATUS_OBJECT_NAME_COLLISION -> Textos.get(R.string.err_nome_existe)
+            NtStatus.STATUS_SHARING_VIOLATION -> Textos.get(R.string.smb_em_uso)
+            NtStatus.STATUS_DIRECTORY_NOT_EMPTY -> Textos.get(R.string.smb_pasta_nao_vazia)
+            NtStatus.STATUS_DISK_FULL -> Textos.get(R.string.smb_disco_cheio)
+            else -> Textos.get(R.string.smb_erro, e.status.toString())
         }, e
     )
 
@@ -218,14 +220,14 @@ object SmbFs : Fs {
 
     override suspend fun mkdir(parent: Loc, name: String): Loc {
         val c = (parent as Loc.Smb).child(name)
-        if (parent.isServerRoot) throw IOException("Não dá para criar pasta na raiz do servidor")
+        if (parent.isServerRoot) throw IOException(Textos.get(R.string.smb_raiz_pasta))
         io(c.serverId) { disk(c).mkdir(c.smbPath) }
         return c
     }
 
     override suspend fun delete(loc: Loc) {
         val l = loc as Loc.Smb
-        if (l.path.isEmpty()) throw IOException("Compartilhamentos não podem ser apagados")
+        if (l.path.isEmpty()) throw IOException(Textos.get(R.string.smb_share_apagar))
         io(l.serverId) {
             val share = disk(l)
             if (share.folderExists(l.smbPath)) share.rmdir(l.smbPath, true) else share.rm(l.smbPath)

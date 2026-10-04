@@ -1,6 +1,8 @@
 package com.mauricio.libertyx.folder.vault
 
 import com.mauricio.libertyx.folder.fs.FileEntry
+import com.mauricio.libertyx.folder.Textos
+import com.mauricio.libertyx.folder.R
 import com.mauricio.libertyx.folder.fs.Fs
 import com.mauricio.libertyx.folder.fs.Loc
 import kotlinx.coroutines.Dispatchers
@@ -29,7 +31,7 @@ object VaultFs : Fs {
     }
 
     override suspend fun stat(loc: Loc): FileEntry? =
-        if (loc.p().isEmpty()) FileEntry(loc, "Pasta segura", true) else Vault.get(loc.p())?.let(::entry)
+        if (loc.p().isEmpty()) FileEntry(loc, Textos.get(R.string.cofre_nome), true) else Vault.get(loc.p())?.let(::entry)
 
     override suspend fun mkdir(parent: Loc, name: String): Loc = withContext(Dispatchers.IO) {
         val c = parent.child(name)
@@ -51,8 +53,8 @@ object VaultFs : Fs {
     }
 
     fun reader(loc: Loc.Vault): VaultCrypto.Reader {
-        val item = Vault.get(loc.path) ?: throw IOException("Arquivo não encontrado")
-        val id = item.id ?: throw IOException("É uma pasta")
+        val item = Vault.get(loc.path) ?: throw IOException(Textos.get(R.string.err_arquivo_nao_achado))
+        val id = item.id ?: throw IOException(Textos.get(R.string.cofre_e_pasta))
         return VaultCrypto.Reader(Vault.blob(id), VaultCrypto.fileKey(Vault.key(), id))
     }
 

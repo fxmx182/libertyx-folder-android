@@ -219,7 +219,9 @@ def banner(W, H, slogan=None):
 # Play Store: a imagem de destaque e o banner da faixa de Android TV.
 LOJA = os.path.join(AQUI, "../loja/imagens")
 os.makedirs(LOJA, exist_ok=True)
-banner(1024, 500, "Seus arquivos e a sua rede, na TV.").save(os.path.join(LOJA, "destaque-1024x500-pt.png"), optimize=True)
+for lingua, frase in {"pt": "Seus arquivos e a sua rede, na TV.", "en": "Your files and your network, on your TV.",
+                      "es": "Tus archivos y tu red, en tu TV."}.items():
+    banner(1024, 500, frase).save(os.path.join(LOJA, f"destaque-1024x500-{lingua}.png"), optimize=True)
 banner(1280, 720).save(os.path.join(LOJA, "tv-banner-1280x720.png"), optimize=True)
 
 for pasta_dens, (W, H) in {"drawable-mdpi": (320, 180), "drawable-xhdpi": (640, 360)}.items():

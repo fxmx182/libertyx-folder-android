@@ -1,6 +1,7 @@
 package com.mauricio.libertyx.folder.ops
 
 import android.app.Notification
+import com.mauricio.libertyx.folder.R
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
@@ -25,7 +26,7 @@ class OpsService : Service() {
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         val nm = getSystemService(NotificationManager::class.java)
         if (Build.VERSION.SDK_INT >= 26) {
-            nm.createNotificationChannel(NotificationChannel("ops", "Operações de arquivo", NotificationManager.IMPORTANCE_LOW))
+            nm.createNotificationChannel(NotificationChannel("ops", getString(R.string.notif_canal_ops), NotificationManager.IMPORTANCE_LOW))
         }
         val n = notificacao(Ops.state.value)
         if (Build.VERSION.SDK_INT >= 29) startForeground(1, n, ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC)
@@ -47,7 +48,7 @@ class OpsService : Service() {
         val abrir = PendingIntent.getActivity(this, 0, Intent(this, MainActivity::class.java), PendingIntent.FLAG_IMMUTABLE)
         val b = if (Build.VERSION.SDK_INT >= 26) Notification.Builder(this, "ops") else @Suppress("DEPRECATION") Notification.Builder(this)
         return b.setSmallIcon(android.R.drawable.stat_sys_download)
-            .setContentTitle(s?.titulo ?: "LibertyX Folder")
+            .setContentTitle(s?.titulo ?: getString(R.string.app_name))
             .setContentText(s?.atual ?: "")
             .setProgress(1000, ((s?.fracao ?: 0f) * 1000).toInt(), (s?.total ?: 0L) == 0L)
             .setOngoing(true)

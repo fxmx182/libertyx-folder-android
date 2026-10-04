@@ -35,6 +35,15 @@ O painel de progresso (copiar/mover/excluir) **some sozinho** 3,5 s depois de te
 
 Fire TV sem a tela de "acesso a todos os arquivos": o app pede acesso às mídias e mostra o comando `adb shell appops set com.mauricio.libertyx.folder MANAGE_EXTERNAL_STORAGE allow`. SMB funciona sem permissão nenhuma ("Só usar servidores de rede").
 
+## Idiomas
+
+O app segue o idioma do aparelho, como o LibertyX Player: **inglês é o padrão** (`values/`, e `resources.properties` declara isso), com **português** (`values-pt/`) e **espanhol** (`values-es/`); qualquer outro idioma cai no inglês. No Android 13+ a lista sai de `generateLocaleConfig`, e dá para escolher um idioma só para o app. O pacote da loja leva os três (`bundle.language.enableSplit = false`).
+
+- Nas telas: `stringResource` / `pluralStringResource`. Fora delas (erros, notificação, títulos das operações): `Textos.get` / `Textos.plural`.
+- Texto que muda com "PIN"/"senha" tem **duas strings** (`…_pin`, `…_senha`), e não interpolação — o artigo e a concordância mudam de idioma para idioma.
+- Tamanhos (`Fmt.size`) usam a vírgula ou o ponto do idioma; datas vêm do sistema.
+- **Texto novo entra nos três idiomas.** Testar: `adb shell cmd locale set-app-locales com.mauricio.libertyx.folder --locales es-ES` (e `--locales ""` para voltar ao do sistema).
+
 ## LibertyX Folder Pro (TV)
 
 O modelo do LibertyX Player. Os arquivos da TV são grátis para sempre; a **rede** (servidores SMB, a busca automática, abrir e copiar da rede) vem liberada nos 7 primeiros dias e depois pede o Pro, compra única `libertyx_folder_pro`. O teste é contado pelo app (a Play não tem teste para compra única); a data vai no backup do Android — só ela, ver `src/tv/res/xml/backup_tv.xml` —, para reinstalar não recomeçar.

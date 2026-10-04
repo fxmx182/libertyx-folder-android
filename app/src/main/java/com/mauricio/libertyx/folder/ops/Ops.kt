@@ -1,6 +1,8 @@
 package com.mauricio.libertyx.folder.ops
 
 import android.content.Context
+import com.mauricio.libertyx.folder.Textos
+import com.mauricio.libertyx.folder.R
 import android.content.Intent
 import android.os.Build
 import com.mauricio.libertyx.folder.fs.FileEntry
@@ -64,7 +66,7 @@ object Ops {
                 bloco()
                 _state.value = _state.value?.copy(terminou = true)
             } catch (e: kotlinx.coroutines.CancellationException) {
-                _state.value = _state.value?.copy(terminou = true, erro = "Cancelado")
+                _state.value = _state.value?.copy(terminou = true, erro = Textos.get(R.string.op_cancelado))
             } catch (e: Throwable) {
                 _state.value = _state.value?.copy(terminou = true, erro = e.message ?: e.toString())
             } finally {
@@ -73,7 +75,7 @@ object Ops {
         }
     }
 
-    fun delete(context: Context, itens: List<FileEntry>) = iniciar(context, "Excluindo") {
+    fun delete(context: Context, itens: List<FileEntry>) = iniciar(context, Textos.get(R.string.op_excluindo)) {
         _state.value = _state.value!!.copy(itensTotal = itens.size)
         itens.forEachIndexed { i, e ->
             coroutineContext.ensureActive()
@@ -84,11 +86,11 @@ object Ops {
     }
 
     fun transfer(context: Context, itens: List<FileEntry>, destino: Loc, mover: Boolean) =
-        iniciar(context, if (mover) "Movendo" else "Copiando") {
+        iniciar(context, Textos.get(if (mover) R.string.op_movendo else R.string.op_copiando)) {
             for (e in itens) {
-                if (destino == e.loc || isInside(destino, e.loc)) throw IOException("Não dá para ${if (mover) "mover" else "copiar"} uma pasta para dentro dela mesma")
+                if (destino == e.loc || isInside(destino, e.loc)) throw IOException(Textos.get(if (mover) R.string.op_dentro_mover else R.string.op_dentro_copiar))
             }
-            _state.value = _state.value!!.copy(atual = "Calculando…", itensTotal = itens.size)
+            _state.value = _state.value!!.copy(atual = Textos.get(R.string.op_calculando), itensTotal = itens.size)
             val total = itens.sumOf { tamanho(it) }
             _state.value = _state.value!!.copy(total = total)
 
@@ -157,14 +159,14 @@ object Ops {
      * "Retirar da pasta segura": cada item volta para a pasta de onde veio;
      * se ela não existe mais (ou veio de servidor), vai para Download.
      */
-    fun restore(context: Context, itens: List<FileEntry>) = iniciar(context, "Retirando da pasta segura") {
+    fun restore(context: Context, itens: List<FileEntry>) = iniciar(context, Textos.get(R.string.op_retirando)) {
         val download = android.os.Environment.getExternalStoragePublicDirectory(android.os.Environment.DIRECTORY_DOWNLOADS).path
         val grupos = itens.groupBy { e ->
             val origem = (e.loc as? Loc.Vault)?.let { com.mauricio.libertyx.folder.vault.VaultFs.origem(it) }
             val pai = origem?.let { java.io.File(it).parentFile }?.takeIf { it.isDirectory }?.path ?: download
             com.mauricio.libertyx.folder.media.Storage.locFor(context, pai)
         }
-        _state.value = _state.value!!.copy(itensTotal = itens.size, atual = "Calculando…")
+        _state.value = _state.value!!.copy(itensTotal = itens.size, atual = Textos.get(R.string.op_calculando))
         _state.value = _state.value!!.copy(total = itens.sumOf { tamanho(it) })
         var feitos = 0
         for ((destino, grupo) in grupos) for (e in grupo) {

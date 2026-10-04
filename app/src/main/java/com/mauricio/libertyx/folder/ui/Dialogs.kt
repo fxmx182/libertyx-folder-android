@@ -1,6 +1,9 @@
 package com.mauricio.libertyx.folder.ui
 
 import androidx.compose.foundation.clickable
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
+import com.mauricio.libertyx.folder.R
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -50,7 +53,7 @@ fun NameDialog(titulo: String, inicial: String, confirmar: String, onDismiss: ()
             )
         },
         confirmButton = { TextButton(modifier = Modifier.tvFocus(24.dp), onClick = { onOk(v.text.trim()) }, enabled = !invalido) { Text(confirmar) } },
-        dismissButton = { TextButton(modifier = Modifier.tvFocus(24.dp), onClick = onDismiss) { Text("Cancelar") } },
+        dismissButton = { TextButton(modifier = Modifier.tvFocus(24.dp), onClick = onDismiss) { Text(stringResource(R.string.cancelar)) } },
     )
     LaunchedEffect(Unit) { foco.requestFocus() }
 }
@@ -60,7 +63,7 @@ fun ConfirmDialog(titulo: String, texto: String, confirmar: String, onDismiss: (
     AlertDialog(
         onDismissRequest = onDismiss, title = { Text(titulo) }, text = { Text(texto) },
         confirmButton = { TextButton(modifier = Modifier.tvFocus(24.dp), onClick = onOk) { Text(confirmar, color = MaterialTheme.colorScheme.error) } },
-        dismissButton = { TextButton(modifier = Modifier.tvFocus(24.dp), onClick = onDismiss) { Text("Cancelar") } },
+        dismissButton = { TextButton(modifier = Modifier.tvFocus(24.dp), onClick = onDismiss) { Text(stringResource(R.string.cancelar)) } },
     )
 }
 
@@ -68,23 +71,23 @@ fun ConfirmDialog(titulo: String, texto: String, confirmar: String, onDismiss: (
 fun SortDialog(onDismiss: () -> Unit) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Ordenar por") },
+        title = { Text(stringResource(R.string.ordenar_por)) },
         text = {
             Column(Modifier.setasTrocamDeCampo()) {
                 Sort.entries.forEach { s ->
                     Row(Modifier.fillMaxWidth().tvFocus(12.dp).clickable { Prefs.sort = s }, verticalAlignment = Alignment.CenterVertically) {
-                        RadioButton(Prefs.sort == s, null); Text(s.titulo)
+                        RadioButton(Prefs.sort == s, null); Text(stringResource(s.titulo))
                     }
                 }
                 Row(Modifier.fillMaxWidth().padding(top = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Text("Ordem crescente", Modifier.weight(1f)); Switch(Prefs.asc, { Prefs.asc = it })
+                    Text(stringResource(R.string.ordem_crescente), Modifier.weight(1f)); Switch(Prefs.asc, { Prefs.asc = it })
                 }
                 Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                    Text("Mostrar arquivos ocultos", Modifier.weight(1f)); Switch(Prefs.hidden, { Prefs.hidden = it })
+                    Text(stringResource(R.string.mostrar_ocultos), Modifier.weight(1f)); Switch(Prefs.hidden, { Prefs.hidden = it })
                 }
             }
         },
-        confirmButton = { TextButton(modifier = Modifier.tvFocus(24.dp), onClick = onDismiss) { Text("OK") } },
+        confirmButton = { TextButton(modifier = Modifier.tvFocus(24.dp), onClick = onDismiss) { Text(stringResource(R.string.ok)) } },
     )
 }
 
@@ -106,29 +109,32 @@ fun DetailsDialog(itens: List<FileEntry>, onDismiss: () -> Unit) {
     val um = itens.singleOrNull()
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(um?.name ?: "${itens.size} itens") },
+        title = { Text(um?.name ?: pluralStringResource(R.plurals.n_itens, itens.size, itens.size)) },
         text = {
             Column {
                 @Composable fun linha(k: String, v: String) {
                     Text(k, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 10.dp))
                     Text(v, style = MaterialTheme.typography.bodyMedium)
                 }
-                linha("Tamanho", tamanho?.let { Fmt.size(it) + if (it >= 1024) " (%,d bytes)".format(it) else "" } ?: "Calculando…")
-                if (itens.any { it.isDir } && tamanho != null) linha("Contém", "${contagem.first} arquivos, ${maxOf(0, contagem.second - itens.count { it.isDir })} pastas")
+                val bytes = tamanho?.let { if (it >= 1024) " " + stringResource(R.string.det_bytes, "%,d".format(java.util.Locale.getDefault(), it)) else "" }
+                linha(stringResource(R.string.det_tamanho), tamanho?.let { Fmt.size(it) + bytes } ?: stringResource(R.string.op_calculando))
+                val pastas = maxOf(0, contagem.second - itens.count { it.isDir })
+                if (itens.any { it.isDir } && tamanho != null) linha(stringResource(R.string.det_contem),
+                    pluralStringResource(R.plurals.n_arquivos, contagem.first, contagem.first) + ", " + pluralStringResource(R.plurals.n_pastas, pastas, pastas))
                 if (um != null) {
-                    if (um.modified > 0) linha("Modificado", Fmt.date(um.modified))
-                    if (!um.isDir) linha("Tipo", Mime.of(um.name))
-                    linha("Local", descrever(ctx, um.loc))
+                    if (um.modified > 0) linha(stringResource(R.string.det_modificado), Fmt.date(um.modified))
+                    if (!um.isDir) linha(stringResource(R.string.det_tipo), Mime.of(um.name))
+                    linha(stringResource(R.string.det_local), descrever(ctx, um.loc))
                 }
             }
         },
-        confirmButton = { TextButton(modifier = Modifier.tvFocus(24.dp), onClick = onDismiss) { Text("OK") } },
+        confirmButton = { TextButton(modifier = Modifier.tvFocus(24.dp), onClick = onDismiss) { Text(stringResource(R.string.ok)) } },
     )
 }
 
 fun descrever(ctx: android.content.Context, loc: Loc): String = when (loc) {
     is Loc.Local -> loc.path
-    is Loc.Vault -> "Pasta segura" + if (loc.path.isEmpty()) "" else "/" + loc.path
+    is Loc.Vault -> ctx.getString(R.string.cofre_nome) + if (loc.path.isEmpty()) "" else "/" + loc.path
     is Loc.Smb -> {
         val s = SmbServerStore.get(ctx).byId(loc.serverId)
         "smb://${s?.displayHost ?: "?"}/${loc.share}${if (loc.path.isEmpty()) "" else "/" + loc.path}"

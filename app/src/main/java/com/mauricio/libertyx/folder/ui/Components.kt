@@ -1,6 +1,8 @@
 package com.mauricio.libertyx.folder.ui
 
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.ui.res.stringResource
+import com.mauricio.libertyx.folder.R
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.combinedClickable
@@ -226,23 +228,25 @@ fun OpPanel(modifier: Modifier = Modifier) {
         Column(Modifier.padding(horizontal = 20.dp, vertical = 14.dp)) {
             val titulo = when {
                 !op.terminou -> op.titulo + "…"
-                op.erro != null -> "Falhou"
-                else -> "Concluído"
+                op.erro != null -> stringResource(R.string.op_falhou)
+                else -> stringResource(R.string.op_concluido)
             }
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
                     Text(titulo, fontWeight = FontWeight.SemiBold)
+                    val nDeM = stringResource(R.string.op_n_de_m, minOf(op.itensFeitos + if (op.terminou) 0 else 1, op.itensTotal), op.itensTotal)
+                    val tamDe = stringResource(R.string.op_tam_de, Fmt.size(op.feitos), Fmt.size(op.total))
                     val det = op.erro ?: buildString {
-                        if (op.itensTotal > 0) append("${minOf(op.itensFeitos + if (op.terminou) 0 else 1, op.itensTotal)} de ${op.itensTotal}")
-                        if (op.total > 0) append("  ·  ${Fmt.size(op.feitos)} de ${Fmt.size(op.total)}")
+                        if (op.itensTotal > 0) append(nDeM)
+                        if (op.total > 0) append("  ·  $tamDe")
                         if (!op.terminou && op.atual.isNotEmpty()) append("\n${op.atual}")
                     }
                     Text(det, style = MaterialTheme.typography.bodySmall,
                         color = if (op.erro != null) MaterialTheme.colorScheme.error else Lx.apagado,
                         maxLines = 3, overflow = TextOverflow.Ellipsis)
                 }
-                if (op.terminou) TextButton(onClick = { Ops.dismiss() }, Modifier.focusRequester(foco).tvFocus(24.dp)) { Text("OK") }
-                else TextButton(onClick = { Ops.cancel() }, Modifier.focusRequester(foco).tvFocus(24.dp)) { Text("Cancelar") }
+                if (op.terminou) TextButton(onClick = { Ops.dismiss() }, Modifier.focusRequester(foco).tvFocus(24.dp)) { Text(stringResource(R.string.ok)) }
+                else TextButton(onClick = { Ops.cancel() }, Modifier.focusRequester(foco).tvFocus(24.dp)) { Text(stringResource(R.string.cancelar)) }
             }
             if (!op.terminou) {
                 Spacer(Modifier.height(10.dp))

@@ -1,6 +1,9 @@
 package com.mauricio.libertyx.folder.ui
 
 import android.widget.Toast
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
+import com.mauricio.libertyx.folder.R
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -61,40 +64,40 @@ fun SettingsScreen(vm: MainVm, screen: Screen.Settings) {
     val aberta by Vault.unlocked.collectAsState()
     var dialogo by remember { mutableStateOf<String?>(null) }
     val existe = remember(versao) { Vault.isSetUp }
-    val nome = remember(versao) { if (Vault.tipo == Vault.Tipo.Pin) "PIN" else "senha" }
+    val ehPin = remember(versao) { Vault.tipo == Vault.Tipo.Pin }
 
     Scaffold(
         containerColor = Color.Transparent,
         topBar = {
             TopAppBar(
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent),
-                navigationIcon = { IconButton(modifier = Modifier.tvFocus(24.dp), onClick = { vm.pop() }) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Voltar") } },
-                title = { Text("Configurações", fontWeight = FontWeight.Bold, letterSpacing = (-0.3).sp) },
+                navigationIcon = { IconButton(modifier = Modifier.tvFocus(24.dp), onClick = { vm.pop() }) { Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.voltar)) } },
+                title = { Text(stringResource(R.string.configuracoes), fontWeight = FontWeight.Bold, letterSpacing = (-0.3).sp) },
             )
         },
     ) { pad ->
         LazyColumn(Modifier.fillMaxSize().padding(pad), contentPadding = PaddingValues(bottom = 48.dp)) {
             if (BuildConfig.PRO) {
-                item { SectionTitle("LibertyX Pro") }
+                item { SectionTitle(stringResource(R.string.pro_nome)) }
                 item {
                     val pro by Pro.estado.collectAsState()
                     Card(Modifier.padding(horizontal = 16.dp)) {
                         Opcao(
-                            Icons.Filled.WorkspacePremium, "LibertyX Pro",
+                            Icons.Filled.WorkspacePremium, stringResource(R.string.pro_nome),
                             when (val e = pro) {
-                                Pro.Estado.Comprado -> "Ativo — a rede está liberada para sempre"
-                                is Pro.Estado.Teste -> "Teste grátis: ${e.diasRestantes} dia${if (e.diasRestantes == 1) "" else "s"} com a rede liberada"
-                                Pro.Estado.Expirado -> "Teste encerrado — libere a rede com uma compra única"
+                                Pro.Estado.Comprado -> stringResource(R.string.cfg_pro_ativo)
+                                is Pro.Estado.Teste -> pluralStringResource(R.plurals.cfg_pro_teste, e.diasRestantes, e.diasRestantes)
+                                Pro.Estado.Expirado -> stringResource(R.string.cfg_pro_expirado)
                             },
                         ) { vm.push(Screen.Pro()) }
                     }
                 }
             }
             if (BuildConfig.GUIA) {
-                item { SectionTitle("Ajuda") }
+                item { SectionTitle(stringResource(R.string.sec_ajuda)) }
                 item {
                     Card(Modifier.padding(horizontal = 16.dp)) {
-                        Opcao(Icons.Filled.School, "Guia de uso", "Todas as ferramentas, uma por página, no controle remoto") {
+                        Opcao(Icons.Filled.School, stringResource(R.string.cfg_guia), stringResource(R.string.cfg_guia_sub)) {
                             vm.push(Screen.Guia())
                         }
                     }
@@ -105,70 +108,70 @@ fun SettingsScreen(vm: MainVm, screen: Screen.Settings) {
             // recurso sumir não pode levar os arquivos de alguém junto.
             if (!BuildConfig.PASTA_SEGURA) {
                 if (existe) {
-                    item { SectionTitle("Pasta segura antiga") }
+                    item { SectionTitle(stringResource(R.string.sec_cofre_antigo)) }
                     item {
                         Card(Modifier.padding(horizontal = 16.dp)) {
-                            Opcao(Icons.Filled.FolderOpen, "Abrir para retirar os arquivos",
-                                "A TV não tem mais pasta segura: selecione tudo e use Mais › Retirar") { abrirPastaSegura(vm) }
-                            Opcao(Icons.Filled.DeleteForever, "Excluir pasta segura",
-                                "Apaga de vez o que sobrou nela e ${if (nome == "PIN") "o PIN" else "a senha"}",
+                            Opcao(Icons.Filled.FolderOpen, stringResource(R.string.cfg_antigo_abrir),
+                                stringResource(R.string.cfg_antigo_abrir_sub)) { abrirPastaSegura(vm) }
+                            Opcao(Icons.Filled.DeleteForever, stringResource(R.string.cfg_excluir_cofre),
+                                stringResource(if (ehPin) R.string.cfg_antigo_excluir_sub_pin else R.string.cfg_antigo_excluir_sub_senha),
                                 perigo = true) { dialogo = "excluir" }
                         }
                     }
                 }
                 item {
                     Text(
-                        "LibertyX Folder ${BuildConfig.VERSION_NAME}",
+                        stringResource(R.string.versao, BuildConfig.VERSION_NAME),
                         Modifier.padding(start = 26.dp, top = 28.dp), fontSize = 12.sp, color = Lx.tenue,
                     )
                 }
                 return@LazyColumn
             }
-            item { SectionTitle("Pasta segura") }
+            item { SectionTitle(stringResource(R.string.cofre_nome)) }
             item {
                 Card(Modifier.padding(horizontal = 16.dp)) {
                     if (!existe) {
-                        Opcao(Icons.Filled.Lock, "Criar pasta segura", "Guarde arquivos cifrados, protegidos por PIN ou senha") {
+                        Opcao(Icons.Filled.Lock, stringResource(R.string.cfg_criar), stringResource(R.string.cfg_criar_sub)) {
                             abrirPastaSegura(vm)
                         }
                         return@Card
                     }
-                    Opcao(Icons.Filled.FolderOpen, "Abrir pasta segura", if (aberta) "Desbloqueada" else "Bloqueada") { abrirPastaSegura(vm) }
-                    if (aberta) Opcao(Icons.Filled.Lock, "Bloquear agora", "Exige ${if (nome == "PIN") "o PIN" else "a senha"} para abrir de novo") {
+                    Opcao(Icons.Filled.FolderOpen, stringResource(R.string.cfg_abrir), stringResource(if (aberta) R.string.cfg_desbloqueada else R.string.cofre_bloqueada_curto)) { abrirPastaSegura(vm) }
+                    if (aberta) Opcao(Icons.Filled.Lock, stringResource(R.string.cfg_bloquear_agora), stringResource(if (ehPin) R.string.cfg_bloquear_sub_pin else R.string.cfg_bloquear_sub_senha)) {
                         Vault.lock(); vm.esquecerCofre()
-                        Toast.makeText(ctx, "Pasta segura bloqueada", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(ctx, ctx.getString(R.string.cfg_bloqueada_toast), Toast.LENGTH_SHORT).show()
                     }
-                    Opcao(Icons.Filled.Key, if (nome == "PIN") "Alterar PIN" else "Alterar senha", "Também dá para trocar entre PIN e senha com letras") {
+                    Opcao(Icons.Filled.Key, stringResource(if (ehPin) R.string.cfg_alterar_pin else R.string.cfg_alterar_senha), stringResource(R.string.cfg_alterar_sub)) {
                         vm.push(Screen.Pin(PinModo.Trocar) {})
                     }
                     Opcao(
                         if (Vault.visivel) Icons.Filled.Visibility else Icons.Filled.VisibilityOff,
-                        "Mostrar pasta segura no início",
-                        if (Vault.visivel) "Aparece na tela inicial" else "Oculta: acesse por aqui, em Configurações",
+                        stringResource(R.string.cfg_mostrar),
+                        stringResource(if (Vault.visivel) R.string.cfg_mostrar_sim else R.string.cfg_mostrar_nao),
                         switch = Vault.visivel,
                     ) {
                         // Mudar a visibilidade exige o PIN: senão qualquer um revelaria a pasta.
                         val novo = !Vault.visivel
                         comCofre(vm) { Vault.visivel = novo }
                     }
-                    Opcao(Icons.Filled.LockClock, "Bloqueio automático", textoBloqueio(Vault.autoBloqueio)) { dialogo = "bloqueio" }
+                    Opcao(Icons.Filled.LockClock, stringResource(R.string.cfg_bloqueio_auto), textoBloqueio(Vault.autoBloqueio)) { dialogo = "bloqueio" }
                 }
             }
 
-            item { SectionTitle("Em caso de perda ou roubo") }
+            item { SectionTitle(stringResource(R.string.sec_perda)) }
             item {
                 Card(Modifier.padding(horizontal = 16.dp)) {
                     Opcao(
-                        Icons.Filled.PhonelinkErase, "Apagar após ${Vault.LIMITE_APAGAR} tentativas erradas",
-                        "Se alguém errar ${if (nome == "PIN") "o PIN" else "a senha"} ${Vault.LIMITE_APAGAR} vezes seguidas, tudo é apagado",
+                        Icons.Filled.PhonelinkErase, stringResource(R.string.cfg_apagar10, Vault.LIMITE_APAGAR),
+                        stringResource(if (ehPin) R.string.cfg_apagar10_sub_pin else R.string.cfg_apagar10_sub_senha, Vault.LIMITE_APAGAR),
                         switch = existe && Vault.apagarApos10, enabled = existe,
                     ) {
                         val novo = !Vault.apagarApos10
                         comCofre(vm) { Vault.apagarApos10 = novo }
                     }
                     Opcao(
-                        Icons.Filled.DeleteForever, "Excluir pasta segura",
-                        "Apaga de vez todos os arquivos e ${if (nome == "PIN") "o PIN" else "a senha"}",
+                        Icons.Filled.DeleteForever, stringResource(R.string.cfg_excluir_cofre),
+                        stringResource(if (ehPin) R.string.cfg_excluir_sub_pin else R.string.cfg_excluir_sub_senha),
                         perigo = true, enabled = existe,
                     ) { dialogo = "excluir" }
                 }
@@ -179,7 +182,7 @@ fun SettingsScreen(vm: MainVm, screen: Screen.Settings) {
     when (dialogo) {
         "bloqueio" -> AlertDialog(
             onDismissRequest = { dialogo = null },
-            title = { Text("Bloqueio automático") },
+            title = { Text(stringResource(R.string.cfg_bloqueio_auto)) },
             text = {
                 Column(Modifier.setasTrocamDeCampo()) {
                     listOf(0, 60, 300, 1800).forEach { seg ->
@@ -193,29 +196,26 @@ fun SettingsScreen(vm: MainVm, screen: Screen.Settings) {
                     }
                 }
             },
-            confirmButton = { TextButton(modifier = Modifier.tvFocus(24.dp), onClick = { dialogo = null }) { Text("Fechar") } },
+            confirmButton = { TextButton(modifier = Modifier.tvFocus(24.dp), onClick = { dialogo = null }) { Text(stringResource(R.string.fechar)) } },
         )
         "excluir" -> ConfirmDialog(
-            "Excluir a pasta segura?",
-            "Todos os arquivos dentro dela serão apagados para sempre, sem como recuperar. " +
-                "Para continuar, confirme ${if (nome == "PIN") "o PIN" else "a senha"}.",
-            "Excluir", { dialogo = null },
+            stringResource(R.string.cfg_excluir_titulo),
+            stringResource(if (ehPin) R.string.cfg_excluir_texto_pin else R.string.cfg_excluir_texto_senha),
+            stringResource(R.string.excluir), { dialogo = null },
         ) {
             dialogo = null
             vm.push(Screen.Pin(PinModo.Confirmar) { v ->
                 Vault.erase(); v.esquecerCofre()
-                Toast.makeText(ctx, "Pasta segura excluída", Toast.LENGTH_LONG).show()
+                Toast.makeText(ctx, ctx.getString(R.string.cfg_excluida_toast), Toast.LENGTH_LONG).show()
             })
         }
     }
 }
 
-private fun textoBloqueio(seg: Int) = when (seg) {
-    0 -> "Ao sair do app"
-    60 -> "1 minuto fora do app"
-    300 -> "5 minutos fora do app"
-    else -> "${seg / 60} minutos fora do app"
-}
+@Composable
+private fun textoBloqueio(seg: Int): String =
+    if (seg == 0) stringResource(R.string.bloq_ao_sair)
+    else pluralStringResource(R.plurals.bloq_minutos, seg / 60, seg / 60)
 
 @Composable
 private fun Opcao(

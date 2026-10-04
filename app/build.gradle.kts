@@ -106,6 +106,19 @@ android {
         }
     }
 
+    // O idioma segue o do aparelho (inglês, português ou espanhol; inglês para
+    // os demais), e a partir do Android 13 dá para escolher um só para o app
+    // em Configurações › Apps › Idioma. A lista sai das pastas values-xx.
+    androidResources {
+        generateLocaleConfig = true
+    }
+
+    // Na loja, todos os idiomas vão juntos: a Play entregaria só o do
+    // aparelho, e quem escolhesse outro idioma para o app cairia no inglês.
+    bundle {
+        language { enableSplit = false }
+    }
+
     buildFeatures {
         compose = true
         buildConfig = true

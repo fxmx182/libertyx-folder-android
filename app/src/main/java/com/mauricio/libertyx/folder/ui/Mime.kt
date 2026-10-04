@@ -1,6 +1,7 @@
 package com.mauricio.libertyx.folder.ui
 
 import android.text.format.DateFormat
+import java.util.Locale
 import android.webkit.MimeTypeMap
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Android
@@ -104,7 +105,9 @@ object Fmt {
         val u = listOf("KB", "MB", "GB", "TB")
         var v = b / 1024.0; var i = 0
         while (v >= 1024 && i < u.size - 1) { v /= 1024; i++ }
-        return if (v >= 100) "%.0f %s".format(v, u[i]) else "%.1f %s".format(v, u[i]).replace('.', ',')
+        // A vírgula ou o ponto decimal do idioma do aparelho: 1,5 GB / 1.5 GB.
+        return if (v >= 100) String.format(Locale.getDefault(), "%.0f %s", v, u[i])
+        else String.format(Locale.getDefault(), "%.1f %s", v, u[i])
     }
 
     fun date(ms: Long): String {

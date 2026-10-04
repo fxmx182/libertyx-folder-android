@@ -1,6 +1,8 @@
 package com.mauricio.libertyx.folder.ui
 
 import android.app.Activity
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
 import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -61,11 +63,11 @@ import com.mauricio.libertyx.folder.pro.Loja
 import com.mauricio.libertyx.folder.pro.Pro
 
 /** O que o Pro libera, na ordem em que a tela e o guia mostram. */
-val VantagensDoPro: List<Pair<ImageVector, String>> = listOf(
-    Icons.Filled.Lan to "Servidores SMB: computador, NAS e disco do roteador",
-    Icons.Filled.Radar to "Busca automática dos computadores da rede",
-    Icons.Filled.PlayCircle to "Vídeos e fotos do servidor abertos sem baixar",
-    Icons.Filled.SwapHoriz to "Copiar e mover entre a TV e o computador",
+val VantagensDoPro: List<Pair<ImageVector, Int>> = listOf(
+    Icons.Filled.Lan to R.string.pro_v_smb,
+    Icons.Filled.Radar to R.string.pro_v_busca,
+    Icons.Filled.PlayCircle to R.string.pro_v_abrir,
+    Icons.Filled.SwapHoriz to R.string.pro_v_copiar,
 )
 
 /**
@@ -90,7 +92,7 @@ fun ProScreen(vm: MainVm) {
 
     Box(Modifier.fillMaxSize().statusBarsPadding()) {
         IconButton(onClick = { vm.pop() }, Modifier.padding(8.dp).tvFocus(24.dp)) {
-            Icon(Icons.AutoMirrored.Filled.ArrowBack, "Voltar")
+            Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.voltar))
         }
         Row(
             // Tudo numa tela só, sem rolar: na TV, conteúdo que rola some de
@@ -128,12 +130,10 @@ fun ProScreen(vm: MainVm) {
                 verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 val (titulo, sub) = when (val e = estado) {
-                    Pro.Estado.Comprado -> "Pro ativo. Obrigado!" to
-                        "A rede está liberada para sempre nesta conta Google — em toda TV onde você entrar com ela."
-                    is Pro.Estado.Teste -> "A rede está liberada por mais ${e.diasRestantes} dia${if (e.diasRestantes == 1) "" else "s"}" to
-                        "São ${Pro.DIAS_DE_TESTE} dias para experimentar tudo. Depois, a rede vira Pro: uma compra só, sem assinatura."
-                    Pro.Estado.Expirado -> "Libere a rede de vez" to
-                        "O teste grátis terminou. Os arquivos da TV continuam grátis; a rede pede o Pro — uma compra só, sem assinatura."
+                    Pro.Estado.Comprado -> stringResource(R.string.pro_titulo_ativo) to stringResource(R.string.pro_sub_ativo)
+                    is Pro.Estado.Teste -> pluralStringResource(R.plurals.pro_titulo_teste, e.diasRestantes, e.diasRestantes) to
+                        stringResource(R.string.pro_sub_teste, Pro.DIAS_DE_TESTE)
+                    Pro.Estado.Expirado -> stringResource(R.string.pro_titulo_expirado) to stringResource(R.string.pro_sub_expirado)
                 }
                 Text(titulo, fontSize = 23.sp, lineHeight = 27.sp, fontWeight = FontWeight.ExtraBold, letterSpacing = (-0.5).sp)
                 Text(sub, fontSize = 13.sp, lineHeight = 17.sp, color = Lx.apagado)
@@ -142,61 +142,60 @@ fun ProScreen(vm: MainVm) {
                     VantagensDoPro.forEach { (icone, texto) ->
                         Row(Modifier.padding(horizontal = 14.dp, vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
                             Selo(Lx.ouro, 28.dp, 9.dp) { Icon(icone, null, tint = Lx.ouro, modifier = Modifier.size(15.dp)) }
-                            Text(texto, fontSize = 13.sp, modifier = Modifier.padding(start = 12.dp))
+                            Text(stringResource(texto), fontSize = 13.sp, modifier = Modifier.padding(start = 12.dp))
                         }
                     }
                 }
                 Text(
-                    "Grátis para sempre: arquivos da TV e do pendrive, categorias, pesquisa, copiar, mover, renomear e excluir.",
+                    stringResource(R.string.pro_gratis_sempre),
                     fontSize = 11.sp, lineHeight = 14.sp, color = Lx.tenue,
                 )
                 if (estado != Pro.Estado.Comprado) {
                     when (val s = situacao) {
                         Loja.Situacao.Conectando -> Row(verticalAlignment = Alignment.CenterVertically) {
                             CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp, color = Lx.ouro)
-                            Text("Consultando a Google Play…", Modifier.padding(start = 12.dp), color = Lx.apagado)
+                            Text(stringResource(R.string.pro_consultando), Modifier.padding(start = 12.dp), color = Lx.apagado)
                         }
                         Loja.Situacao.Indisponivel -> {
                             Text(
-                                "A compra é feita pela Google Play, que não respondeu nesta TV. " +
-                                    "Confira a internet e se a Play Store está instalada (o Fire TV não tem).",
+                                stringResource(R.string.pro_indisponivel),
                                 fontSize = 12.sp, lineHeight = 16.sp, color = Lx.apagado,
                             )
                             Button(
                                 onClick = { Loja.atualizar() },
                                 modifier = Modifier.focusRequester(foco).tvFocus(24.dp),
-                            ) { Text("Tentar de novo") }
+                            ) { Text(stringResource(R.string.tentar_de_novo)) }
                         }
                         is Loja.Situacao.Pronta -> {
                             Button(
                                 onClick = {
                                     val ok = (ctx as? Activity)?.let { Loja.comprar(it) } ?: false
-                                    if (!ok) Toast.makeText(ctx, "Não foi possível abrir a Google Play", Toast.LENGTH_LONG).show()
+                                    if (!ok) Toast.makeText(ctx, ctx.getString(R.string.pro_play_falhou), Toast.LENGTH_LONG).show()
                                 },
                                 colors = ButtonDefaults.buttonColors(containerColor = Lx.ouro, contentColor = Color(0xFF1A1200)),
                                 modifier = Modifier.fillMaxWidth().height(52.dp).focusRequester(foco).tvFocus(26.dp),
                             ) {
-                                Text("Comprar o Pro · ${s.preco}", fontWeight = FontWeight.ExtraBold, fontSize = 16.sp)
+                                Text(stringResource(R.string.pro_comprar, s.preco), fontWeight = FontWeight.ExtraBold, fontSize = 16.sp)
                             }
-                            Text("Compra única. Vale em todas as TVs da mesma conta Google.", fontSize = 12.sp, color = Lx.tenue)
+                            Text(stringResource(R.string.pro_compra_unica), fontSize = 12.sp, color = Lx.tenue)
                         }
                     }
                     if (pendente) Text(
-                        "Pagamento pendente: o Pro é liberado assim que a Google Play confirmar.",
+                        stringResource(R.string.pro_pendente),
                         fontSize = 13.sp, color = Lx.ouroClaro,
                     )
                     TextButton(
                         onClick = {
                             Loja.atualizar()
-                            Toast.makeText(ctx, "Procurando compras desta conta…", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(ctx, ctx.getString(R.string.pro_procurando), Toast.LENGTH_SHORT).show()
                         },
                         modifier = Modifier.tvFocus(24.dp),
-                    ) { Text("Restaurar compra") }
+                    ) { Text(stringResource(R.string.pro_restaurar)) }
                 } else {
                     Button(
                         onClick = { vm.pop() },
                         modifier = Modifier.focusRequester(foco).tvFocus(24.dp),
-                    ) { Text("Voltar") }
+                    ) { Text(stringResource(R.string.voltar)) }
                 }
             }
         }
@@ -212,7 +211,7 @@ fun SeloDoPro(modifier: Modifier = Modifier) {
     val estado by Pro.estado.collectAsState()
     val texto = when (val e = estado) {
         Pro.Estado.Comprado -> return
-        is Pro.Estado.Teste -> "PRO GRÁTIS · ${e.diasRestantes} DIA${if (e.diasRestantes == 1) "" else "S"}"
+        is Pro.Estado.Teste -> pluralStringResource(R.plurals.pro_selo_teste, e.diasRestantes, e.diasRestantes)
         Pro.Estado.Expirado -> "PRO"
     }
     Text(

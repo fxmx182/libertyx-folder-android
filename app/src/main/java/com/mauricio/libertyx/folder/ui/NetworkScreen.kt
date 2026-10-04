@@ -1,6 +1,9 @@
 package com.mauricio.libertyx.folder.ui
 
 import androidx.compose.foundation.clickable
+import androidx.compose.ui.res.stringResource
+import com.mauricio.libertyx.folder.Textos
+import com.mauricio.libertyx.folder.R
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -88,36 +91,36 @@ fun NetworkScreen(vm: MainVm, screen: Screen.Network) {
         topBar = {
             TopAppBar(
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = androidx.compose.ui.graphics.Color.Transparent),
-                navigationIcon = { IconButton(modifier = Modifier.tvFocus(24.dp), onClick = { vm.pop() }) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Voltar") } },
-                title = { Text("Servidores de rede", fontWeight = FontWeight.Bold) },
+                navigationIcon = { IconButton(modifier = Modifier.tvFocus(24.dp), onClick = { vm.pop() }) { Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.voltar)) } },
+                title = { Text(stringResource(R.string.rede_servidores), fontWeight = FontWeight.Bold) },
                 actions = {
                     if (buscando) CircularProgressIndicator(Modifier.padding(end = 16.dp).size(20.dp), strokeWidth = 2.dp)
-                    else IconButton(modifier = Modifier.tvFocus(24.dp), onClick = { scope.launch { Descobertas.buscar(ctx.applicationContext) } }) { Icon(Icons.Filled.Refresh, "Buscar") }
+                    else IconButton(modifier = Modifier.tvFocus(24.dp), onClick = { scope.launch { Descobertas.buscar(ctx.applicationContext) } }) { Icon(Icons.Filled.Refresh, stringResource(R.string.buscar)) }
                 },
             )
         },
     ) { pad ->
         LazyColumn(Modifier.fillMaxSize().padding(pad), contentPadding = PaddingValues(bottom = 100.dp)) {
             if (servidores.isNotEmpty()) {
-                item { SectionTitle("Salvos") }
+                item { SectionTitle(stringResource(R.string.rede_salvos)) }
                 item {
                     Card(Modifier.padding(horizontal = 16.dp)) {
                         servidores.forEach { s ->
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Box(Modifier.weight(1f)) {
-                                    NetRow(Icons.Filled.Lan, s.name, s.displayHost + if (s.isGuest) " · convidado" else if (s.username.isNotBlank()) " · ${s.username}" else "") {
+                                    NetRow(Icons.Filled.Lan, s.name, s.displayHost + if (s.isGuest) stringResource(R.string.rede_convidado) else if (s.username.isNotBlank()) " · ${s.username}" else "") {
                                         vm.push(Screen.Folder(Loc.Smb(s.id)))
                                     }
                                 }
                                 var menu by remember { mutableStateOf(false) }
                                 Box {
-                                    IconButton(modifier = Modifier.tvFocus(24.dp), onClick = { menu = true }) { Icon(Icons.Filled.MoreVert, "Opções") }
+                                    IconButton(modifier = Modifier.tvFocus(24.dp), onClick = { menu = true }) { Icon(Icons.Filled.MoreVert, stringResource(R.string.opcoes)) }
                                     DropdownMenu(menu, { menu = false }) {
-                                        DropdownMenuItem({ Text("Editar") }, {
+                                        DropdownMenuItem({ Text(stringResource(R.string.editar)) }, {
                                             menu = false
                                             rascunho = ServerDraft(s.id, s.name, s.host, s.port, s.username, store.password(s), s.domain, s.isGuest)
                                         })
-                                        DropdownMenuItem({ Text("Remover") }, { menu = false; remover = s })
+                                        DropdownMenuItem({ Text(stringResource(R.string.remover)) }, { menu = false; remover = s })
                                     }
                                 }
                             }
@@ -128,7 +131,7 @@ fun NetworkScreen(vm: MainVm, screen: Screen.Network) {
 
             item {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    SectionTitle("Encontrados nesta rede", Modifier.weight(1f))
+                    SectionTitle(stringResource(R.string.rede_encontrados), Modifier.weight(1f))
                 }
             }
             item {
@@ -137,22 +140,21 @@ fun NetworkScreen(vm: MainVm, screen: Screen.Network) {
                     achados.forEach { a ->
                         val jaSalvo = a.host in salvos
                         NetRow(Icons.Filled.Computer, a.nome,
-                            (if (a.nome != a.host) a.host else "SMB") + if (jaSalvo) " · já salvo" else "", destaque = !jaSalvo) {
+                            (if (a.nome != a.host) a.host else "SMB") + if (jaSalvo) stringResource(R.string.rede_ja_salvo) else "", destaque = !jaSalvo) {
                             val s = servidores.firstOrNull { it.host == a.host }
                             if (s != null) vm.push(Screen.Folder(Loc.Smb(s.id)))
                             else rascunho = ServerDraft(nome = a.nome, host = a.host)
                         }
                     }
                     if (achados.isEmpty()) Text(
-                        if (buscando) "Procurando computadores e NAS com compartilhamento…" else
-                            "Nada encontrado. Confira se está no mesmo Wi-Fi que o servidor, ou adicione pelo IP.",
+                        stringResource(if (buscando) R.string.rede_procurando_nas else R.string.rede_nada),
                         Modifier.padding(horizontal = 20.dp, vertical = 14.dp), color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
             }
             item {
                 Card(Modifier.padding(16.dp)) {
-                    NetRow(Icons.Filled.Add, "Adicionar manualmente", "Pelo IP ou nome do servidor") { rascunho = ServerDraft() }
+                    NetRow(Icons.Filled.Add, stringResource(R.string.rede_manual), stringResource(R.string.rede_manual_sub)) { rascunho = ServerDraft() }
                 }
             }
         }
@@ -165,7 +167,7 @@ fun NetworkScreen(vm: MainVm, screen: Screen.Network) {
         }
     }
     remover?.let { s ->
-        ConfirmDialog("Remover ${s.name}?", "Só o atalho e a senha salvos são removidos; nada é apagado do servidor.", "Remover",
+        ConfirmDialog(stringResource(R.string.rede_remover_titulo, s.name), stringResource(R.string.rede_remover_texto), stringResource(R.string.remover),
             { remover = null }) { store.remove(s); remover = null }
     }
 }
@@ -183,38 +185,38 @@ fun ServerDialog(inicial: ServerDraft, onDismiss: () -> Unit, onSaved: (SmbServe
 
     AlertDialog(
         onDismissRequest = { if (!testando) onDismiss() },
-        title = { Text(if (inicial.id == null) "Servidor SMB" else "Editar servidor") },
+        title = { Text(stringResource(if (inicial.id == null) R.string.srv_novo else R.string.srv_editar)) },
         text = {
             Column(Modifier.verticalScroll(rememberScrollState()).setasTrocamDeCampo()) {
-                OutlinedTextField(d.host, { d = d.copy(host = it.trim()) }, label = { Text("Endereço (IP ou nome)") }, singleLine = true,
+                OutlinedTextField(d.host, { d = d.copy(host = it.trim()) }, label = { Text(stringResource(R.string.srv_endereco)) }, singleLine = true,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri), modifier = Modifier.fillMaxWidth())
-                OutlinedTextField(d.nome, { d = d.copy(nome = it) }, label = { Text("Nome de exibição (opcional)") }, singleLine = true,
+                OutlinedTextField(d.nome, { d = d.copy(nome = it) }, label = { Text(stringResource(R.string.srv_nome)) }, singleLine = true,
                     modifier = Modifier.fillMaxWidth().padding(top = 6.dp))
                 Row(Modifier.fillMaxWidth().tvFocus(12.dp).clickable { d = d.copy(convidado = !d.convidado) }.padding(top = 8.dp),
                     verticalAlignment = Alignment.CenterVertically) {
-                    Checkbox(d.convidado, null); Text("Entrar como convidado")
+                    Checkbox(d.convidado, null); Text(stringResource(R.string.srv_convidado))
                 }
                 if (!d.convidado) {
-                    OutlinedTextField(d.usuario, { d = d.copy(usuario = it) }, label = { Text("Usuário") }, singleLine = true,
+                    OutlinedTextField(d.usuario, { d = d.copy(usuario = it) }, label = { Text(stringResource(R.string.srv_usuario)) }, singleLine = true,
                         modifier = Modifier.fillMaxWidth())
                     OutlinedTextField(
-                        d.senha, { d = d.copy(senha = it) }, label = { Text("Senha") }, singleLine = true,
+                        d.senha, { d = d.copy(senha = it) }, label = { Text(stringResource(R.string.srv_senha)) }, singleLine = true,
                         visualTransformation = if (verSenha) VisualTransformation.None else PasswordVisualTransformation(),
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
                         trailingIcon = { IconButton(modifier = Modifier.tvFocus(24.dp), onClick = { verSenha = !verSenha }) { Icon(if (verSenha) Icons.Filled.VisibilityOff else Icons.Filled.Visibility, null) } },
                         modifier = Modifier.fillMaxWidth().padding(top = 6.dp),
                     )
                 }
-                TextButton(onClick = { avancado = !avancado }, Modifier.tvFocus(24.dp)) { Text(if (avancado) "Ocultar avançado" else "Avançado") }
+                TextButton(onClick = { avancado = !avancado }, Modifier.tvFocus(24.dp)) { Text(stringResource(if (avancado) R.string.srv_ocultar_avancado else R.string.srv_avancado)) }
                 if (avancado) {
                     OutlinedTextField(d.porta.toString(), { d = d.copy(porta = it.filter(Char::isDigit).take(5).toIntOrNull() ?: 445) },
-                        label = { Text("Porta") }, singleLine = true, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        label = { Text(stringResource(R.string.srv_porta)) }, singleLine = true, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                         modifier = Modifier.fillMaxWidth())
-                    if (!d.convidado) OutlinedTextField(d.dominio, { d = d.copy(dominio = it.trim()) }, label = { Text("Domínio / grupo de trabalho") },
+                    if (!d.convidado) OutlinedTextField(d.dominio, { d = d.copy(dominio = it.trim()) }, label = { Text(stringResource(R.string.srv_dominio)) },
                         singleLine = true, modifier = Modifier.fillMaxWidth().padding(top = 6.dp))
                 }
                 if (testando) Row(Modifier.padding(top = 12.dp), verticalAlignment = Alignment.CenterVertically) {
-                    CircularProgressIndicator(Modifier.size(18.dp), strokeWidth = 2.dp); Text("  Conectando…")
+                    CircularProgressIndicator(Modifier.size(18.dp), strokeWidth = 2.dp); Text("  " + stringResource(R.string.srv_conectando))
                 }
                 erro?.let { Text(it, color = MaterialTheme.colorScheme.error, modifier = Modifier.padding(top = 12.dp)) }
             }
@@ -243,9 +245,9 @@ fun ServerDialog(inicial: ServerDraft, onDismiss: () -> Unit, onSaved: (SmbServe
                         onSaved(s)
                     }.onFailure { e -> erro = mensagem(e) }
                 }
-            }) { Text("Conectar") }
+            }) { Text(stringResource(R.string.srv_conectar)) }
         },
-        dismissButton = { TextButton(modifier = Modifier.tvFocus(24.dp), onClick = onDismiss, enabled = !testando) { Text("Cancelar") } },
+        dismissButton = { TextButton(modifier = Modifier.tvFocus(24.dp), onClick = onDismiss, enabled = !testando) { Text(stringResource(R.string.cancelar)) } },
     )
 }
 
@@ -253,12 +255,12 @@ private fun mensagem(e: Throwable): String {
     val t = generateSequence(e) { it.cause }.toList()
     val api = t.filterIsInstance<com.hierynomus.mssmb2.SMBApiException>().firstOrNull()
     return when {
-        api?.status == com.hierynomus.mserref.NtStatus.STATUS_LOGON_FAILURE -> "Usuário ou senha incorretos."
-        api?.status == com.hierynomus.mserref.NtStatus.STATUS_ACCESS_DENIED -> "Acesso negado. Este servidor pode não aceitar convidado."
-        t.any { it is java.net.UnknownHostException } -> "Servidor não encontrado. Confira o endereço."
-        t.any { it is java.net.ConnectException || it is java.net.SocketTimeoutException } -> "Sem resposta na porta ${445}. O servidor está ligado e na mesma rede?"
-        t.any { it is java.util.concurrent.TimeoutException } -> "O servidor não respondeu a tempo. Se escolheu convidado, ele pode exigir usuário e senha."
-        api != null -> "O servidor recusou: ${api.status}"
+        api?.status == com.hierynomus.mserref.NtStatus.STATUS_LOGON_FAILURE -> Textos.get(R.string.srv_err_senha)
+        api?.status == com.hierynomus.mserref.NtStatus.STATUS_ACCESS_DENIED -> Textos.get(R.string.srv_err_negado)
+        t.any { it is java.net.UnknownHostException } -> Textos.get(R.string.srv_err_host)
+        t.any { it is java.net.ConnectException || it is java.net.SocketTimeoutException } -> Textos.get(R.string.srv_err_porta, 445)
+        t.any { it is java.util.concurrent.TimeoutException } -> Textos.get(R.string.srv_err_tempo)
+        api != null -> Textos.get(R.string.srv_err_recusou, api.status.toString())
         else -> e.message ?: e.toString()
     }
 }

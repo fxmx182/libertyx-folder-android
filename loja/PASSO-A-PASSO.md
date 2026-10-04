@@ -33,7 +33,12 @@ conta de desenvolvedor do LibertyX Player serve (não paga de novo).
   página, terminará em 1 — a Play recusa números repetidos).
 - ✅ Política de privacidade: [`../PRIVACY.md`](../PRIVACY.md). **Falta um
   endereço público** para ela (ver passo 7).
-- ✅ Textos da página: [`FICHA.md`](FICHA.md). Imagens em `imagens/`.
+- ✅ **Idiomas**: o app segue o idioma do aparelho — inglês (padrão para
+  qualquer idioma sem tradução), português e espanhol; no Android 13+ dá para
+  escolher um só para o app em Configurações › Apps › Idioma. O pacote leva os
+  três (sem divisão por idioma), para essa escolha funcionar.
+- ✅ Textos da página nos três idiomas: [`FICHA.md`](FICHA.md). Imagens em
+  `imagens/`, uma série por idioma.
 
 ## Passo a passo no Play Console
 
@@ -52,11 +57,14 @@ conta de desenvolvedor do LibertyX Player serve (não paga de novo).
    redondos. Ativar.
 5. **Testadores de licença** (*Configurações › Teste de licença*): o seu Gmail.
    Compras dessa conta não cobram — é como testar a compra na sua TV.
-6. **Países**: o app e a página estão só em português. Comece por **Brasil e
-   Portugal**; outros países pedem tradução (não feita).
+6. **Países e traduções da página**: o app fala inglês, português e espanhol
+   (e cai no inglês em qualquer outro idioma), então dá para distribuir em
+   todos os países. Em *Página da loja › Gerenciar traduções*, acrescente
+   **inglês (en-US)** e **espanhol (es-419 e es-ES)** com os textos da `FICHA.md`
+   e as imagens `destaque-1024x500-en/es.png` e `tv-en-*` / `tv-es-*.jpg`.
 7. **Conteúdo do app** (*Política › Conteúdo do app*):
    - *Política de privacidade*: precisa de um endereço público com o texto de
-     `PRIVACY.md`. Opções: a pasta do LibertyX Player no GitHub (que já é
+     `PRIVACY.md` (já em inglês, português e espanhol). Opções: a pasta do LibertyX Player no GitHub (que já é
      público), ou uma página no seu domínio.
    - *Acesso ao app*: "Todas as funcionalidades estão disponíveis sem
      restrições" — o revisor usa os 7 dias de teste.
@@ -81,7 +89,8 @@ conta de desenvolvedor do LibertyX Player serve (não paga de novo).
    Google TV / Android TV.
 9. **Página da loja**: textos da `FICHA.md`; ícone `imagens/icone-512.png`;
    destaque `imagens/destaque-1024x500-pt.png`; banner de TV
-   `imagens/tv-banner-1280x720.png`; capturas de TV `imagens/tv-pt-*.jpg`.
+   `imagens/tv-banner-1280x720.png`; capturas de TV `imagens/tv-pt-*.jpg` (e as
+   versões `-en`/`-es` em cada tradução, passo 6).
    Categoria *Ferramentas*. E-mail de contato: obrigatório e público.
 10. **Revisão de TV**: a Play revisa à parte a qualidade em TV (tudo pelo
     controle remoto, banner, sem depender de toque). Já conferido no emulador.

@@ -1,6 +1,8 @@
 package com.mauricio.libertyx.folder.ui
 
 import android.os.Environment
+import androidx.compose.ui.res.stringResource
+import com.mauricio.libertyx.folder.Textos
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -143,7 +145,7 @@ fun HomeScreen(vm: MainVm, screen: Screen.Home) {
                 IconButton(
                     modifier = Modifier.size(44.dp).tvFocus(22.dp).vidro(22.dp),
                     onClick = { vm.push(Screen.Settings()) },
-                ) { Icon(Icons.Filled.Settings, "Configurações", tint = Lx.apagado) }
+                ) { Icon(Icons.Filled.Settings, stringResource(R.string.configuracoes), tint = Lx.apagado) }
             }
         }
         item {
@@ -153,10 +155,10 @@ fun HomeScreen(vm: MainVm, screen: Screen.Home) {
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Icon(Icons.Filled.Search, null, tint = Lx.apagado)
-                    Text("Pesquisar no aparelho", Modifier.padding(start = 12.dp), color = Lx.apagado)
+                    Text(stringResource(R.string.pesquisar_aparelho), Modifier.padding(start = 12.dp), color = Lx.apagado)
                 } else TextField(
                     termo, { termo = it }, singleLine = true,
-                    placeholder = { Text("Pesquisar no aparelho", color = Lx.tenue) },
+                    placeholder = { Text(stringResource(R.string.pesquisar_aparelho), color = Lx.tenue) },
                     leadingIcon = { Icon(Icons.Filled.Search, null, tint = Lx.apagado) },
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
                     keyboardActions = KeyboardActions(onSearch = { if (termo.isNotBlank()) vm.push(Screen.Search(termo.trim(), null)) }),
@@ -171,7 +173,7 @@ fun HomeScreen(vm: MainVm, screen: Screen.Home) {
         }
 
         if (recentes.isNotEmpty()) {
-            item { SectionTitle("Arquivos recentes") }
+            item { SectionTitle(stringResource(R.string.sec_recentes)) }
             item {
                 LazyRow(contentPadding = PaddingValues(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                     items(recentes, key = { it.loc.toString() }) { e ->
@@ -185,7 +187,7 @@ fun HomeScreen(vm: MainVm, screen: Screen.Home) {
             }
         }
 
-        item { SectionTitle("Categorias") }
+        item { SectionTitle(stringResource(R.string.sec_categorias)) }
         item {
             Card(Modifier.padding(horizontal = 16.dp)) {
                 val cats = listOf(
@@ -200,7 +202,7 @@ fun HomeScreen(vm: MainVm, screen: Screen.Home) {
                 cats.chunked(4).forEach { linha ->
                     Row(Modifier.fillMaxWidth().padding(horizontal = 8.dp)) {
                         linha.forEach { (c, icone, cor) ->
-                            CategoryTile(c.titulo.replace("Arquivos de instalação", "Instalação"), icone, cor, Modifier.weight(1f)) {
+                            CategoryTile(stringResource(c.curto), icone, cor, Modifier.weight(1f)) {
                                 if (c == Category.Downloads) {
                                     val d = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
                                     vm.push(Screen.Folder(Storage.locFor(ctx, d.path)))
@@ -213,7 +215,7 @@ fun HomeScreen(vm: MainVm, screen: Screen.Home) {
             }
         }
 
-        item { SectionTitle("Armazenamento") }
+        item { SectionTitle(stringResource(R.string.sec_armazenamento)) }
         item {
             Card(Modifier.padding(horizontal = 16.dp)) {
                 volumes.forEach { v ->
@@ -228,7 +230,7 @@ fun HomeScreen(vm: MainVm, screen: Screen.Home) {
                         Column(Modifier.padding(start = 16.dp).weight(1f)) {
                             Text(v.name, style = MaterialTheme.typography.bodyLarge)
                             if (v.total > 0) {
-                                Text("${Fmt.size(v.total - v.free)} de ${Fmt.size(v.total)}", fontSize = 12.sp, color = Lx.tenue)
+                                Text(stringResource(R.string.op_tam_de, Fmt.size(v.total - v.free), Fmt.size(v.total)), fontSize = 12.sp, color = Lx.tenue)
                                 Spacer(Modifier.height(6.dp)); UsageBar(v.total - v.free, v.total)
                             }
                         }
@@ -247,51 +249,51 @@ fun HomeScreen(vm: MainVm, screen: Screen.Home) {
             ) {
                 val sub = remember(aberto, vv) {
                     when {
-                        !com.mauricio.libertyx.folder.vault.Vault.isSetUp -> "Guarde arquivos cifrados, protegidos por PIN"
-                        aberto -> com.mauricio.libertyx.folder.vault.Vault.snapshot().count { !it.isDir }.let { "Desbloqueada · $it arquivo${if (it == 1) "" else "s"}" }
-                        else -> "Bloqueada"
+                        !com.mauricio.libertyx.folder.vault.Vault.isSetUp -> Textos.get(R.string.cofre_sub_criar)
+                        aberto -> com.mauricio.libertyx.folder.vault.Vault.snapshot().count { !it.isDir }.let { Textos.plural(R.plurals.cofre_sub_aberta, it, it) }
+                        else -> Textos.get(R.string.cofre_bloqueada_curto)
                     }
                 }
-                NetRow(if (aberto) Icons.Filled.LockOpen else Icons.Filled.Lock, "Pasta segura", sub) { abrirPastaSegura(vm) }
+                NetRow(if (aberto) Icons.Filled.LockOpen else Icons.Filled.Lock, stringResource(R.string.cofre_nome), sub) { abrirPastaSegura(vm) }
             }
         }
 
         item {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                SectionTitle("Rede")
+                SectionTitle(stringResource(R.string.sec_rede))
                 if (com.mauricio.libertyx.folder.BuildConfig.PRO) SeloDoPro(Modifier.padding(top = 14.dp))
                 Spacer(Modifier.weight(1f))
                 if (buscando) CircularProgressIndicator(Modifier.padding(top = 16.dp, end = 12.dp).size(16.dp), strokeWidth = 2.dp, color = Lx.ouro)
                 else IconButton(onClick = { scope.launch { Descobertas.buscar(ctx.applicationContext) } }, Modifier.padding(top = 14.dp).tvFocus(24.dp)) {
-                    Icon(Icons.Filled.Refresh, "Buscar de novo", tint = Lx.apagado)
+                    Icon(Icons.Filled.Refresh, stringResource(R.string.buscar_de_novo), tint = Lx.apagado)
                 }
             }
         }
         item {
             Card(Modifier.padding(horizontal = 16.dp)) {
                 servidores.forEach { s ->
-                    NetRow(Icons.Filled.Lan, s.name, s.displayHost + if (s.isGuest) " · convidado" else if (s.username.isNotBlank()) " · ${s.username}" else "") {
+                    NetRow(Icons.Filled.Lan, s.name, s.displayHost + if (s.isGuest) stringResource(R.string.rede_convidado) else if (s.username.isNotBlank()) " · ${s.username}" else "") {
                         rede { vm.push(Screen.Folder(Loc.Smb(s.id))) }
                     }
                 }
                 val salvos = servidores.map { it.host }.toSet()
                 achados.filter { it.host !in salvos }.forEach { a ->
-                    NetRow(Icons.Filled.Computer, a.nome, if (a.nome != a.host) "${a.host} · encontrado na rede" else "Encontrado na rede", destaque = true) {
+                    NetRow(Icons.Filled.Computer, a.nome, if (a.nome != a.host) stringResource(R.string.rede_achado_em, a.host) else stringResource(R.string.rede_achado), destaque = true) {
                         rede { servidorNovo = ServerDraft(nome = a.nome, host = a.host) }
                     }
                 }
                 if (servidores.isEmpty() && achados.isEmpty()) {
                     Text(
-                        if (buscando) "Procurando servidores SMB na rede…" else "Nenhum servidor encontrado",
+                        if (buscando) stringResource(R.string.rede_procurando) else stringResource(R.string.rede_nenhum),
                         Modifier.padding(horizontal = 20.dp, vertical = 12.dp), color = Lx.tenue, fontSize = 14.sp,
                     )
                 }
-                NetRow(Icons.Filled.Add, "Servidores de rede", "Procurar e adicionar servidor SMB") { rede { vm.push(Screen.Network()) } }
+                NetRow(Icons.Filled.Add, stringResource(R.string.rede_servidores), stringResource(R.string.rede_servidores_sub)) { rede { vm.push(Screen.Network()) } }
             }
         }
     }
 
-    if (buscaTv) NameDialog("Pesquisar no aparelho", "", "Pesquisar", { buscaTv = false }) { t ->
+    if (buscaTv) NameDialog(stringResource(R.string.pesquisar_aparelho), "", stringResource(R.string.pesquisar), { buscaTv = false }) { t ->
         buscaTv = false; vm.push(Screen.Search(t, null))
     }
     servidorNovo?.let { d ->

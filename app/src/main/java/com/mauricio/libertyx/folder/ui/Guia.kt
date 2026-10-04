@@ -1,6 +1,9 @@
 package com.mauricio.libertyx.folder.ui
 
 import androidx.activity.compose.BackHandler
+import androidx.annotation.StringRes
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
@@ -199,19 +202,19 @@ fun GuiaScreen(primeiraVez: Boolean = true, onFim: () -> Unit) {
                                 .background(Lx.ouro).padding(horizontal = 7.dp, vertical = 2.dp),
                         )
                     }
-                    Text(p.titulo, fontSize = 27.sp, lineHeight = 31.sp, fontWeight = FontWeight.ExtraBold, letterSpacing = (-0.6).sp)
+                    Text(p.tituloComposto?.invoke() ?: stringResource(p.titulo), fontSize = 27.sp, lineHeight = 31.sp, fontWeight = FontWeight.ExtraBold, letterSpacing = (-0.6).sp)
                     Text(p.texto(), fontSize = 15.sp, lineHeight = 21.sp, color = Lx.apagado)
                     if (p.teclas.isNotEmpty()) Column(Modifier.padding(top = 2.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                        p.teclas.forEach { (tecla, oQue) -> LinhaDeTecla(tecla, oQue) }
+                        p.teclas.forEach { (tecla, oQue) -> LinhaDeTecla(stringResource(tecla), stringResource(oQue)) }
                     }
                     Spacer(Modifier.height(6.dp))
                     Button(
                         onClick = { ir(1) },
                         colors = ButtonDefaults.buttonColors(containerColor = Lx.ouro, contentColor = Color(0xFF1A1200)),
                         modifier = Modifier.fillMaxWidth().height(48.dp).focusRequester(foco).tvFocus(24.dp),
-                    ) { Text(if (ultima) "Começar" else "Próximo", fontWeight = FontWeight.ExtraBold, fontSize = 16.sp) }
+                    ) { Text(stringResource(if (ultima) R.string.guia_comecar else R.string.guia_proximo), fontWeight = FontWeight.ExtraBold, fontSize = 16.sp) }
                     if (!ultima) TextButton(onClick = onFim, modifier = Modifier.tvFocus(24.dp)) {
-                        Text("Pular o guia", color = Lx.apagado)
+                        Text(stringResource(R.string.guia_pular), color = Lx.apagado)
                     }
                 }
             }
@@ -232,67 +235,51 @@ fun GuiaScreen(primeiraVez: Boolean = true, onFim: () -> Unit) {
 }
 
 private class Pagina(
-    val titulo: String,
+    @StringRes val titulo: Int,
     val texto: @Composable () -> String,
-    val teclas: List<Pair<String, String>> = emptyList(),
+    val teclas: List<Pair<Int, Int>> = emptyList(),
     val pro: Boolean = false,
+    /** Título com o número de dias (plural), em vez de [titulo]. */
+    val tituloComposto: (@Composable () -> String)? = null,
     val cena: @Composable () -> Unit,
 )
 
 private fun paginasDoGuia(primeiraVez: Boolean): List<Pagina> = listOf(
     Pagina(
-        "Bem-vindo ao LibertyX Folder",
-        { "Os arquivos da TV e os do seu computador, abertos e organizados pelo controle remoto. Este guia mostra cada ferramenta — leva um minuto." },
-        listOf("◀ ▶" to "mudam de página", "Voltar" to if (primeiraVez) "pula o guia" else "fecha o guia"),
+        R.string.guia1_t, { stringResource(R.string.guia1_x) },
+        listOf(R.string.tecla_setas_lado to R.string.guia_t_muda_pagina,
+            R.string.tecla_voltar to if (primeiraVez) R.string.guia_t_pula else R.string.guia_t_fecha),
     ) { CenaBoasVindas() },
     Pagina(
-        "O controle remoto",
-        { "O destaque dourado mostra onde você está. Ele vai aparecer em todo o app — é só segui-lo." },
-        listOf("Setas" to "movem o destaque", "OK" to "abre", "Segurar OK" to "seleciona", "Voltar" to "volta uma pasta e fecha avisos"),
+        R.string.guia2_t, { stringResource(R.string.guia2_x) },
+        listOf(R.string.tecla_setas to R.string.guia_t_movem, R.string.tecla_ok to R.string.guia_t_abre,
+            R.string.tecla_segurar_ok to R.string.guia_t_seleciona, R.string.tecla_voltar to R.string.guia_t_volta),
     ) { CenaControle() },
+    Pagina(R.string.guia3_t, { stringResource(R.string.guia3_x) }) { CenaInicio() },
+    Pagina(R.string.guia4_t, { stringResource(R.string.guia4_x) }) { CenaPastas() },
     Pagina(
-        "A tela inicial",
-        { "Tudo começa aqui: a pesquisa no aparelho inteiro, as categorias prontas (imagens, vídeos, áudio, documentos, downloads, instaladores e compactados), o armazenamento da TV e do pendrive, e a rede." },
-    ) { CenaInicio() },
-    Pagina(
-        "Pastas",
-        { "Lista ou grade, como preferir. A trilha no alto leva de volta a qualquer pasta do caminho de uma vez. Em ⋮ Mais: nova pasta, ordenar por nome, data, tamanho ou tipo, mostrar ocultos e atualizar." },
-    ) { CenaPastas() },
-    Pagina(
-        "Selecionar e agir",
-        { "Segure OK num arquivo para começar a seleção; depois, OK marca outros. A barra de baixo move, copia, compartilha e exclui — e em Mais ficam renomear, abrir com outro app e detalhes." },
-        listOf("Segurar OK" to "começa a seleção", "Voltar" to "desfaz a seleção"),
+        R.string.guia5_t, { stringResource(R.string.guia5_x) },
+        listOf(R.string.tecla_segurar_ok to R.string.guia_t_comeca_sel, R.string.tecla_voltar to R.string.guia_t_desfaz_sel),
     ) { CenaSelecao() },
+    Pagina(R.string.guia6_t, { stringResource(R.string.guia6_x) }) { CenaColar() },
+    Pagina(R.string.guia7_t, { stringResource(R.string.guia7_x) }, pro = true) { CenaRede() },
+    Pagina(R.string.guia8_t, { stringResource(R.string.guia8_x) }, pro = true) { CenaAssistir() },
+    Pagina(R.string.guia9_t, { stringResource(R.string.guia9_x) }) { CenaPesquisa() },
     Pagina(
-        "Copiar e mover",
-        { "Escolheu Mover ou Copiar? Abra a pasta de destino — na TV, no pendrive ou num computador da rede — e confirme. O progresso aparece embaixo e some sozinho quando termina. Nada é sobrescrito: um repetido vira \"nome (1)\"." },
-    ) { CenaColar() },
-    Pagina(
-        "A rede",
-        { "Ao abrir, o app procura sozinho os computadores, NAS e roteadores com disco da sua casa. Escolha um e entre com usuário e senha — ou como convidado, se a pasta for aberta. Os servidores ficam salvos na tela inicial." },
-        pro = true,
-    ) { CenaRede() },
-    Pagina(
-        "Assistir sem baixar",
-        { "Vídeos, músicas e fotos do servidor abrem direto no app que você escolher — o LibertyX Player, por exemplo —, lidos aos pedaços, sem esperar baixar. Avançar e voltar funcionam como num arquivo da própria TV." },
-        pro = true,
-    ) { CenaAssistir() },
-    Pagina(
-        "Pesquisar",
-        { "Na tela inicial, a pesquisa varre o aparelho inteiro. Dentro de uma pasta, a lupa filtra o que está à vista — e a seta ao lado procura também em todas as subpastas, até num servidor da rede." },
-    ) { CenaPesquisa() },
-    Pagina(
-        "7 dias com tudo liberado",
+        0,
         {
             val s by Loja.situacao.collectAsState()
             val preco = (s as? Loja.Situacao.Pronta)?.preco
             val estado by Pro.estado.collectAsState()
-            val permissao = if (primeiraVez) " Ao continuar, o app pede acesso aos arquivos da TV — é o que deixa mostrá-los e organizá-los." else ""
-            if (estado == Pro.Estado.Comprado) "O Pro está ativo: a rede é sua para sempre, em todas as TVs da sua conta Google.$permissao"
-            else "Os primeiros ${Pro.DIAS_DE_TESTE} dias vêm com tudo liberado. Depois, os arquivos da TV continuam grátis para sempre, e a rede vira Pro: " +
-                "uma compra única${if (preco != null) " de $preco" else ""}, sem assinatura, válida em todas as TVs da sua conta Google.$permissao"
+            val permissao = if (primeiraVez) stringResource(R.string.guia10_permissao) else ""
+            when {
+                estado == Pro.Estado.Comprado -> stringResource(R.string.guia10_ativo) + permissao
+                preco != null -> stringResource(R.string.guia10_x_preco, Pro.DIAS_DE_TESTE, preco) + permissao
+                else -> stringResource(R.string.guia10_x, Pro.DIAS_DE_TESTE) + permissao
+            }
         },
         pro = true,
+        tituloComposto = { pluralStringResource(R.plurals.guia10_t, Pro.DIAS_DE_TESTE, Pro.DIAS_DE_TESTE) },
     ) { CenaPro() },
 )
 
@@ -426,18 +413,18 @@ private fun CenaControle() {
         Box(Modifier.weight(1f).fillMaxHeight().vidro(16.dp).padding(12.dp)) {
             AnimatedContent(aberta, label = "abre") { abriu ->
                 if (!abriu) Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    Text("Armazenamento interno", fontSize = 13.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(bottom = 4.dp))
-                    listOf("Download", "Filmes", "Fotos", "Músicas").forEachIndexed { i, n ->
-                        MiniLinha(Icons.Filled.Folder, Lx.ouro, n, "pasta", focada = i == focoNaLinha)
+                    Text(stringResource(R.string.vol_interno), fontSize = 13.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(bottom = 4.dp))
+                    listOf(stringResource(R.string.g_download), stringResource(R.string.g_filmes), stringResource(R.string.g_fotos), stringResource(R.string.g_musicas)).forEachIndexed { i, n ->
+                        MiniLinha(Icons.Filled.Folder, Lx.ouro, n, stringResource(R.string.g_pasta), focada = i == focoNaLinha)
                     }
                 } else Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    Text("Fotos", fontSize = 13.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(bottom = 4.dp))
-                    MiniLinha(Icons.Filled.Image, Color(0xFFC08BFF), "praia.jpg", "2,4 MB", focada = true)
-                    MiniLinha(Icons.Filled.Image, Color(0xFFC08BFF), "aniversario.jpg", "3,1 MB")
-                    MiniLinha(Icons.Filled.VideoFile, Color(0xFFFF6E8A), "festa.mp4", "184 MB")
+                    Text(stringResource(R.string.g_fotos), fontSize = 13.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(bottom = 4.dp))
+                    MiniLinha(Icons.Filled.Image, Color(0xFFC08BFF), stringResource(R.string.g_praia), "2,4 MB", focada = true)
+                    MiniLinha(Icons.Filled.Image, Color(0xFFC08BFF), stringResource(R.string.g_aniversario), "3,1 MB")
+                    MiniLinha(Icons.Filled.VideoFile, Color(0xFFFF6E8A), stringResource(R.string.g_festa), "184 MB")
                 }
             }
-            Legenda(when (passo) { 0, 1 -> "▼ desce"; 2 -> "OK abre a pasta"; 3 -> "Voltar volta uma pasta"; else -> "▲ sobe" })
+            Legenda(when (passo) { 0, 1 -> stringResource(R.string.g_desce); 2 -> stringResource(R.string.g_ok_abre); 3 -> stringResource(R.string.g_voltar_volta); else -> stringResource(R.string.g_sobe) })
         }
     }
 }
@@ -492,9 +479,9 @@ private fun CenaInicio() {
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Icon(Icons.Filled.Search, null, Modifier.size(14.dp), tint = Lx.apagado)
-                Text("Pesquisar no aparelho", fontSize = 11.sp, color = Lx.tenue, modifier = Modifier.padding(start = 8.dp))
+                Text(stringResource(R.string.pesquisar_aparelho), fontSize = 11.sp, color = Lx.tenue, modifier = Modifier.padding(start = 8.dp))
             }
-            Text("CATEGORIAS", style = Lx.tituloSecao.copy(fontSize = 8.sp))
+            Text(stringResource(R.string.sec_categorias).uppercase(), style = Lx.tituloSecao.copy(fontSize = 8.sp))
             Row(
                 Modifier.fillMaxWidth().vidro(14.dp).focoDeMentira(passo == 1, 14.dp).padding(8.dp),
                 horizontalArrangement = Arrangement.SpaceEvenly,
@@ -505,29 +492,29 @@ private fun CenaInicio() {
                     Icons.Filled.Download to Lx.ouro, Icons.Filled.Android to Color(0xFF8BD962), Icons.Filled.FolderZip to Color(0xFFD9A15C),
                 ).forEach { (i, c) -> Selo(c, 24.dp, 7.dp) { Icon(i, null, tint = c, modifier = Modifier.size(13.dp)) } }
             }
-            Text("ARMAZENAMENTO", style = Lx.tituloSecao.copy(fontSize = 8.sp))
+            Text(stringResource(R.string.sec_armazenamento).uppercase(), style = Lx.tituloSecao.copy(fontSize = 8.sp))
             Row(
                 Modifier.fillMaxWidth().vidro(14.dp).focoDeMentira(passo == 2, 14.dp).padding(10.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Selo(Lx.ouro, 24.dp, 7.dp) { Icon(Icons.Filled.Tv, null, tint = Lx.ouro, modifier = Modifier.size(13.dp)) }
                 Column(Modifier.padding(start = 10.dp).weight(1f)) {
-                    Text("Armazenamento interno", fontSize = 11.sp)
+                    Text(stringResource(R.string.vol_interno), fontSize = 11.sp)
                     Box(Modifier.padding(top = 4.dp).fillMaxWidth().height(3.dp).clip(CircleShape).background(Lx.vidroForte)) {
                         Box(Modifier.fillMaxWidth(0.62f).height(3.dp).background(Brush.horizontalGradient(listOf(Lx.ouroClaro, Lx.ouroEscuro))))
                     }
                 }
             }
-            Text("REDE", style = Lx.tituloSecao.copy(fontSize = 8.sp))
+            Text(stringResource(R.string.sec_rede).uppercase(), style = Lx.tituloSecao.copy(fontSize = 8.sp))
             Row(
                 Modifier.fillMaxWidth().vidro(14.dp).focoDeMentira(passo == 3, 14.dp).padding(10.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Selo(Lx.verde, 24.dp, 7.dp) { Icon(Icons.Filled.Computer, null, tint = Lx.verde, modifier = Modifier.size(13.dp)) }
-                Text("PC-SALA · encontrado na rede", fontSize = 11.sp, modifier = Modifier.padding(start = 10.dp))
+                Text(stringResource(R.string.rede_achado_em, stringResource(R.string.g_pc)), fontSize = 11.sp, modifier = Modifier.padding(start = 10.dp))
             }
         }
-        Legenda(when (passo) { 0 -> "Pesquisa no aparelho inteiro"; 1 -> "Categorias prontas"; 2 -> "TV e pendrive"; else -> "Computadores da rede" })
+        Legenda(when (passo) { 0 -> stringResource(R.string.g_l_pesquisa); 1 -> stringResource(R.string.g_l_categorias); 2 -> stringResource(R.string.g_l_tv_pendrive); else -> stringResource(R.string.g_l_computadores) })
     }
 }
 
@@ -538,15 +525,15 @@ private fun CenaPastas() {
     val grade = passo in 2..4
     val focoIcone = when (passo) { 1 -> "grade"; 3, 4 -> "mais"; else -> null }
     val itens = listOf(
-        Triple(Icons.Filled.Folder, Lx.ouro, "Séries"), Triple(Icons.Filled.Folder, Lx.ouro, "Shows"),
-        Triple(Icons.Filled.VideoFile, Color(0xFFFF6E8A), "trailer.mkv"), Triple(Icons.Filled.Image, Color(0xFFC08BFF), "capa.jpg"),
-        Triple(Icons.Filled.Audiotrack, Color(0xFF35D0BE), "tema.mp3"), Triple(Icons.Filled.Description, Color(0xFF5B9CFF), "notas.pdf"),
+        Triple(Icons.Filled.Folder, Lx.ouro, stringResource(R.string.g_series)), Triple(Icons.Filled.Folder, Lx.ouro, stringResource(R.string.g_shows)),
+        Triple(Icons.Filled.VideoFile, Color(0xFFFF6E8A), "trailer.mkv"), Triple(Icons.Filled.Image, Color(0xFFC08BFF), stringResource(R.string.g_capa)),
+        Triple(Icons.Filled.Audiotrack, Color(0xFF35D0BE), stringResource(R.string.g_tema)), Triple(Icons.Filled.Description, Color(0xFF5B9CFF), stringResource(R.string.g_notas)),
     )
     Box(Modifier.fillMaxSize().padding(18.dp)) {
         Column {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(Icons.AutoMirrored.Filled.ArrowBack, null, Modifier.size(16.dp), tint = Lx.apagado)
-                Text("Filmes", fontSize = 15.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(start = 10.dp).weight(1f))
+                Text(stringResource(R.string.g_filmes), fontSize = 15.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(start = 10.dp).weight(1f))
                 Icon(Icons.Filled.Search, null, Modifier.size(16.dp), tint = Lx.apagado)
                 Box(Modifier.padding(start = 10.dp).focoDeMentira(focoIcone == "grade", 8.dp).padding(3.dp)) {
                     Icon(if (grade) Icons.Filled.ViewList else Icons.Filled.GridView, null, Modifier.size(16.dp), tint = Lx.apagado)
@@ -557,7 +544,7 @@ private fun CenaPastas() {
             }
             // A trilha: o caminho em pastilhas.
             Row(Modifier.padding(vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-                listOf("Armazenamento", "Movies", "Filmes").forEachIndexed { i, n ->
+                listOf(stringResource(R.string.sec_armazenamento), stringResource(R.string.g_videos_pasta), stringResource(R.string.g_filmes)).forEachIndexed { i, n ->
                     val ultima = i == 2
                     Text(n, fontSize = 9.sp, color = if (ultima) Lx.ouro else Lx.apagado,
                         modifier = Modifier.then(if (ultima) Modifier.vidro(8.dp, Lx.ouro.copy(alpha = 0.10f), Lx.ouro.copy(alpha = 0.3f)) else Modifier.vidro(8.dp))
@@ -567,7 +554,7 @@ private fun CenaPastas() {
             }
             AnimatedContent(grade, label = "grade") { emGrade ->
                 if (!emGrade) Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                    itens.take(5).forEach { (i, c, n) -> MiniLinha(i, c, n, "12 de set. · 4,2 GB") }
+                    itens.take(5).forEach { (i, c, n) -> MiniLinha(i, c, n, stringResource(R.string.g_data_tam)) }
                 } else Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     itens.chunked(3).forEach { linha ->
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -592,12 +579,12 @@ private fun CenaPastas() {
         AnimatedVisibility(passo == 4, Modifier.align(Alignment.TopEnd).padding(top = 26.dp),
             enter = fadeIn() + scaleIn(initialScale = 0.9f), exit = fadeOut()) {
             Column(Modifier.width(150.dp).background(Lx.superficie, RoundedCornerShape(12.dp)).vidro(12.dp).padding(vertical = 6.dp)) {
-                listOf("Nova pasta", "Selecionar", "Ordenar e exibir", "Atualizar", "Início").forEachIndexed { i, t ->
+                listOf(stringResource(R.string.nova_pasta), stringResource(R.string.selecionar), stringResource(R.string.ordenar_exibir), stringResource(R.string.atualizar), stringResource(R.string.inicio)).forEachIndexed { i, t ->
                     Text(t, fontSize = 11.sp, modifier = Modifier.fillMaxWidth().focoDeMentira(i == 2, 6.dp).padding(horizontal = 12.dp, vertical = 5.dp))
                 }
             }
         }
-        Legenda(when (passo) { 0 -> "Trilha: volta a qualquer pasta do caminho"; 1, 2 -> "Lista ou grade"; else -> "⋮ Mais: nova pasta, ordenar, ocultos" })
+        Legenda(when (passo) { 0 -> stringResource(R.string.g_l_trilha); 1, 2 -> stringResource(R.string.g_l_lista_grade); else -> stringResource(R.string.g_l_mais) })
     }
 }
 
@@ -612,12 +599,12 @@ private fun CenaSelecao() {
     val segurando = passo == 1
     val anel by animateFloatAsState(if (segurando) 1f else 0f, tween(if (segurando) 1200 else 1), label = "anel")
     val itens = listOf(
-        Triple(Icons.Filled.VideoFile, Color(0xFFFF6E8A), "episodio-01.mkv"), Triple(Icons.Filled.VideoFile, Color(0xFFFF6E8A), "episodio-02.mkv"),
-        Triple(Icons.Filled.VideoFile, Color(0xFFFF6E8A), "episodio-03.mkv"), Triple(Icons.Filled.Description, Color(0xFF5B9CFF), "legendas.srt"),
+        Triple(Icons.Filled.VideoFile, Color(0xFFFF6E8A), stringResource(R.string.g_episodio, 1)), Triple(Icons.Filled.VideoFile, Color(0xFFFF6E8A), stringResource(R.string.g_episodio, 2)),
+        Triple(Icons.Filled.VideoFile, Color(0xFFFF6E8A), stringResource(R.string.g_episodio, 3)), Triple(Icons.Filled.Description, Color(0xFF5B9CFF), stringResource(R.string.g_legendas)),
     )
     Box(Modifier.fillMaxSize()) {
         Column(Modifier.fillMaxSize().padding(18.dp)) {
-            Text(if (selecionando) "${marcadas.size} selecionado${if (marcadas.size > 1) "s" else ""}" else "Séries", fontSize = 15.sp,
+            Text(if (selecionando) pluralStringResource(R.plurals.n_selecionados, marcadas.size, marcadas.size) else stringResource(R.string.g_series), fontSize = 15.sp,
                 fontWeight = FontWeight.Bold, modifier = Modifier.padding(bottom = 10.dp))
             Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
                 itens.forEachIndexed { i, (ic, c, n) ->
@@ -644,8 +631,8 @@ private fun CenaSelecao() {
                 horizontalArrangement = Arrangement.SpaceEvenly,
             ) {
                 listOf(
-                    Icons.Filled.DriveFileMove to "Mover", Icons.Filled.ContentCopy to "Copiar",
-                    Icons.Filled.Share to "Compartilhar", Icons.Filled.Delete to "Excluir", Icons.Filled.MoreVert to "Mais",
+                    Icons.Filled.DriveFileMove to stringResource(R.string.mover), Icons.Filled.ContentCopy to stringResource(R.string.copiar),
+                    Icons.Filled.Share to stringResource(R.string.compartilhar), Icons.Filled.Delete to stringResource(R.string.excluir), Icons.Filled.MoreVert to stringResource(R.string.mais),
                 ).forEachIndexed { i, (ic, t) ->
                     Column(Modifier.focoDeMentira(i == focoBarra, 8.dp).padding(horizontal = 6.dp, vertical = 3.dp),
                         horizontalAlignment = Alignment.CenterHorizontally) {
@@ -656,7 +643,7 @@ private fun CenaSelecao() {
             }
         }
         Box(Modifier.fillMaxSize().padding(bottom = if (selecionando) 46.dp else 0.dp)) {
-            Legenda(when (passo) { 0 -> "Destaque num arquivo"; 1 -> "Segurando OK…"; 2, 3 -> "Selecionado"; 4 -> "OK marca outro"; else -> "Mover, copiar, compartilhar, excluir" })
+            Legenda(when (passo) { 0 -> stringResource(R.string.g_l_destaque); 1 -> stringResource(R.string.g_l_segurando); 2, 3 -> stringResource(R.string.g_l_selecionado); 4 -> stringResource(R.string.g_l_marca_outro); else -> stringResource(R.string.g_l_acoes) })
         }
     }
 }
@@ -675,21 +662,21 @@ private fun CenaColar() {
                         Selo(if (dest) Lx.verde else Lx.ouro, 22.dp, 7.dp) {
                             Icon(if (dest) Icons.Filled.Computer else Icons.Filled.Tv, null, tint = if (dest) Lx.verde else Lx.ouro, modifier = Modifier.size(12.dp))
                         }
-                        Text(if (dest) "PC-SALA › Filmes" else "Download", fontSize = 15.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(start = 8.dp))
+                        Text(if (dest) stringResource(R.string.g_pc) + " › " + stringResource(R.string.g_filmes) else stringResource(R.string.g_download), fontSize = 15.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(start = 8.dp))
                     }
                 }
             }
             AnimatedContent(noDestino, label = "lista") { dest ->
                 Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
                     if (!dest) {
-                        MiniLinha(Icons.Filled.VideoFile, Color(0xFFFF6E8A), "show-ao-vivo.mp4", "2,1 GB")
+                        MiniLinha(Icons.Filled.VideoFile, Color(0xFFFF6E8A), stringResource(R.string.g_show), "2,1 GB")
                         MiniLinha(Icons.Filled.VideoFile, Color(0xFFFF6E8A), "making-of.mp4", "640 MB")
                     } else {
-                        MiniLinha(Icons.Filled.Folder, Lx.ouro, "Clássicos", "pasta")
-                        MiniLinha(Icons.Filled.VideoFile, Color(0xFFFF6E8A), "documentario.mkv", "3,4 GB")
+                        MiniLinha(Icons.Filled.Folder, Lx.ouro, stringResource(R.string.g_classicos), stringResource(R.string.g_pasta))
+                        MiniLinha(Icons.Filled.VideoFile, Color(0xFFFF6E8A), stringResource(R.string.g_documentario), "3,4 GB")
                         if (passo >= 4) {
-                            MiniLinha(Icons.Filled.VideoFile, Color(0xFFFF6E8A), "show-ao-vivo.mp4", "2,1 GB · novo")
-                            MiniLinha(Icons.Filled.VideoFile, Color(0xFFFF6E8A), "making-of.mp4", "640 MB · novo")
+                            MiniLinha(Icons.Filled.VideoFile, Color(0xFFFF6E8A), stringResource(R.string.g_show), "2,1 GB" + stringResource(R.string.g_novo))
+                            MiniLinha(Icons.Filled.VideoFile, Color(0xFFFF6E8A), "making-of.mp4", "640 MB" + stringResource(R.string.g_novo))
                         }
                     }
                 }
@@ -702,8 +689,9 @@ private fun CenaColar() {
                     Modifier.padding(10.dp).fillMaxWidth().background(Lx.superficie, RoundedCornerShape(14.dp)).vidro(14.dp, Lx.vidroForte)
                         .padding(horizontal = 14.dp, vertical = 10.dp),
                 ) {
-                    Text(if (passo == 3) "Copiando…" else "Concluído", fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
-                    Text(if (passo == 3) "2 de 2 · ${(progresso * 2.7f * 10).toInt() / 10f} GB de 2,7 GB" else "some sozinho em instantes",
+                    Text(if (passo == 3) stringResource(R.string.op_copiando) + "…" else stringResource(R.string.op_concluido), fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                    Text(if (passo == 3) stringResource(R.string.op_n_de_m, 2, 2) + " · " + stringResource(R.string.op_tam_de, String.format(java.util.Locale.getDefault(), "%.1f GB", progresso * 2.7f), String.format(java.util.Locale.getDefault(), "%.1f GB", 2.7f))
+                        else stringResource(R.string.g_some),
                         fontSize = 9.sp, color = Lx.apagado)
                     if (passo == 3) Box(Modifier.padding(top = 6.dp).fillMaxWidth().height(3.dp).clip(CircleShape).background(Lx.vidroForte)) {
                         Box(Modifier.fillMaxWidth(progresso).height(3.dp).background(Lx.ouro))
@@ -712,17 +700,17 @@ private fun CenaColar() {
             }
             AnimatedVisibility(passo <= 2, enter = fadeIn(), exit = fadeOut()) {
                 Column(Modifier.fillMaxWidth().background(Lx.superficie).padding(vertical = 6.dp)) {
-                    Text("Copiar 2 itens — abra a pasta de destino", fontSize = 9.sp, color = Lx.apagado, modifier = Modifier.padding(horizontal = 14.dp))
+                    Text(pluralStringResource(R.plurals.colar_copiar, 2, 2), fontSize = 9.sp, color = Lx.apagado, modifier = Modifier.padding(horizontal = 14.dp))
                     Row(Modifier.fillMaxWidth().padding(top = 4.dp), horizontalArrangement = Arrangement.SpaceEvenly) {
-                        Text("Cancelar", fontSize = 11.sp, color = Lx.ouro, modifier = Modifier.padding(6.dp))
-                        Text("Copiar para cá", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Lx.ouro,
+                        Text(stringResource(R.string.cancelar), fontSize = 11.sp, color = Lx.ouro, modifier = Modifier.padding(6.dp))
+                        Text(stringResource(R.string.copiar_para_ca), fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Lx.ouro,
                             modifier = Modifier.focoDeMentira(passo == 2, 8.dp).padding(horizontal = 10.dp, vertical = 6.dp))
                     }
                 }
             }
         }
         Box(Modifier.fillMaxSize().padding(bottom = 64.dp)) {
-            Legenda(when (passo) { 0 -> "Copiar: agora abra o destino"; 1 -> "Outro computador, por exemplo"; 2 -> "Copiar para cá"; 3 -> "O progresso fica embaixo"; else -> "Pronto — e o aviso some sozinho" })
+            Legenda(when (passo) { 0 -> stringResource(R.string.g_l_abra_destino); 1 -> stringResource(R.string.g_l_outro_pc); 2 -> stringResource(R.string.copiar_para_ca); 3 -> stringResource(R.string.g_l_progresso); else -> stringResource(R.string.g_l_pronto) })
         }
     }
 }
@@ -734,9 +722,9 @@ private fun CenaRede() {
     val t = rememberInfiniteTransition(label = "radar")
     val onda by t.animateFloat(0f, 1f, infiniteRepeatable(tween(1800, easing = LinearEasing)), label = "onda")
     val achados = listOf(
-        Triple("PC-SALA", Icons.Filled.Computer, Offset(-118f, -62f)),
-        Triple("NAS-CASA", Icons.Filled.Dns, Offset(122f, -40f)),
-        Triple("ROTEADOR", Icons.Filled.Router, Offset(-96f, 74f)),
+        Triple(stringResource(R.string.g_pc), Icons.Filled.Computer, Offset(-118f, -62f)),
+        Triple(stringResource(R.string.g_nas), Icons.Filled.Dns, Offset(122f, -40f)),
+        Triple(stringResource(R.string.g_roteador), Icons.Filled.Router, Offset(-96f, 74f)),
     )
     Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         Canvas(Modifier.size(300.dp)) {
@@ -752,7 +740,7 @@ private fun CenaRede() {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Selo(Lx.verde, 36.dp, 11.dp) { Icon(icone, null, tint = Lx.verde, modifier = Modifier.size(19.dp)) }
                     Text(nome, fontSize = 9.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(top = 3.dp))
-                    Text("encontrado", fontSize = 8.sp, color = Lx.tenue)
+                    Text(stringResource(R.string.g_encontrado), fontSize = 8.sp, color = Lx.tenue)
                 }
             }
         }
@@ -764,9 +752,9 @@ private fun CenaRede() {
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Selo(Lx.verde, 24.dp, 8.dp) { Icon(Icons.Filled.Computer, null, tint = Lx.verde, modifier = Modifier.size(13.dp)) }
-                    Text("PC-SALA", fontSize = 13.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(start = 8.dp))
+                    Text(stringResource(R.string.g_pc), fontSize = 13.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(start = 8.dp))
                 }
-                listOf("Usuário" to "maria", "Senha" to "••••••").forEachIndexed { i, (rotulo, valor) ->
+                listOf(stringResource(R.string.srv_usuario) to "maria", stringResource(R.string.srv_senha) to "••••••").forEachIndexed { i, (rotulo, valor) ->
                     Column(Modifier.fillMaxWidth().border(1.dp, if (i == 0) Lx.ouro else Lx.vidroBorda, RoundedCornerShape(8.dp)).padding(horizontal = 8.dp, vertical = 4.dp)) {
                         Text(rotulo, fontSize = 7.sp, color = if (i == 0) Lx.ouro else Lx.tenue)
                         Text(valor, fontSize = 11.sp)
@@ -774,12 +762,12 @@ private fun CenaRede() {
                 }
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(Icons.Filled.RadioButtonUnchecked, null, Modifier.size(12.dp), tint = Lx.tenue)
-                    Text("Entrar como convidado", fontSize = 9.sp, color = Lx.apagado, modifier = Modifier.padding(start = 6.dp))
+                    Text(stringResource(R.string.srv_convidado), fontSize = 9.sp, color = Lx.apagado, modifier = Modifier.padding(start = 6.dp))
                 }
             }
         }
         Box(Modifier.fillMaxSize()) {
-            Legenda(if (passo < 3) "Procurando na rede…" else if (passo == 3) "3 encontrados, sem digitar nada" else "Usuário e senha, ou convidado")
+            Legenda(if (passo < 3) stringResource(R.string.g_l_procurando) else if (passo == 3) stringResource(R.string.g_l_tres) else stringResource(R.string.g_l_usuario_senha))
         }
     }
 }
@@ -797,12 +785,12 @@ private fun CenaAssistir() {
             if (!abriu) Column(Modifier.fillMaxSize().padding(18.dp)) {
                 Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(bottom = 10.dp)) {
                     Selo(Lx.verde, 22.dp, 7.dp) { Icon(Icons.Filled.Lan, null, tint = Lx.verde, modifier = Modifier.size(12.dp)) }
-                    Text("NAS-CASA › Filmes", fontSize = 15.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(start = 8.dp))
+                    Text(stringResource(R.string.g_nas) + " › " + stringResource(R.string.g_filmes), fontSize = 15.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(start = 8.dp))
                 }
                 Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
-                    MiniLinha(Icons.Filled.VideoFile, Color(0xFFFF6E8A), "Viagem ao litoral (4K).mkv", "18,6 GB", focada = true)
-                    MiniLinha(Icons.Filled.VideoFile, Color(0xFFFF6E8A), "Festa de fim de ano.mp4", "2,3 GB")
-                    MiniLinha(Icons.Filled.Audiotrack, Color(0xFF35D0BE), "Trilha sonora.flac", "312 MB")
+                    MiniLinha(Icons.Filled.VideoFile, Color(0xFFFF6E8A), stringResource(R.string.g_viagem), "18,6 GB", focada = true)
+                    MiniLinha(Icons.Filled.VideoFile, Color(0xFFFF6E8A), stringResource(R.string.g_festa_ano), "2,3 GB")
+                    MiniLinha(Icons.Filled.Audiotrack, Color(0xFF35D0BE), stringResource(R.string.g_trilha), "312 MB")
                 }
             } else Box(
                 // O "filme": um céu de fim de tarde que se mexe devagar.
@@ -830,7 +818,7 @@ private fun CenaAssistir() {
                     morro(0.66f, 0.05f, 0.4f, Color(0xFF4A2A22))
                     morro(0.76f, 0.04f, 2.1f, Color(0xFF1C1310))
                 }
-                Text("Viagem ao litoral (4K).mkv", fontSize = 11.sp, fontWeight = FontWeight.SemiBold,
+                Text(stringResource(R.string.g_viagem), fontSize = 11.sp, fontWeight = FontWeight.SemiBold,
                     modifier = Modifier.padding(14.dp))
                 if (passo == 2) Text("+10 s", fontSize = 16.sp, fontWeight = FontWeight.ExtraBold, color = Color.White,
                     modifier = Modifier.align(Alignment.CenterEnd).padding(end = 40.dp)
@@ -841,13 +829,13 @@ private fun CenaAssistir() {
                     }
                     Row(Modifier.padding(top = 4.dp), verticalAlignment = Alignment.CenterVertically) {
                         Icon(Icons.Filled.PlayArrow, null, Modifier.size(14.dp), tint = Color.White)
-                        Text("lendo do servidor, sem baixar", fontSize = 8.sp, color = Color.White.copy(alpha = 0.75f), modifier = Modifier.padding(start = 4.dp))
+                        Text(stringResource(R.string.g_lendo), fontSize = 8.sp, color = Color.White.copy(alpha = 0.75f), modifier = Modifier.padding(start = 4.dp))
                     }
                 }
             }
         }
         Box(Modifier.fillMaxSize().padding(bottom = if (tocando) 46.dp else 0.dp)) {
-            Legenda(when (passo) { 0 -> "OK no vídeo do servidor"; 1 -> "Abre no seu player, na hora"; else -> "Avançar funciona" })
+            Legenda(when (passo) { 0 -> stringResource(R.string.g_l_ok_video); 1 -> stringResource(R.string.g_l_abre_player); else -> stringResource(R.string.g_l_avancar) })
         }
     }
 }
@@ -855,7 +843,7 @@ private fun CenaAssistir() {
 @Composable
 private fun CenaPesquisa() {
     // Digita "férias" letra a letra; os resultados aparecem, inclusive do servidor.
-    val palavra = "férias"
+    val palavra = stringResource(R.string.g_palavra)
     val passo = rememberRoteiro(*(LongArray(palavra.length + 1) { 260L }.also { it[0] = 900 } + longArrayOf(2600)))
     val letras = passo.coerceAtMost(palavra.length)
     val mostrar = passo > palavra.length
@@ -870,11 +858,11 @@ private fun CenaPesquisa() {
         }
         AnimatedVisibility(mostrar, enter = fadeIn(tween(300)) + slideInVertically { it / 6 }, exit = fadeOut()) {
             Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
-                Text("RESULTADOS", style = Lx.tituloSecao.copy(fontSize = 8.sp), modifier = Modifier.padding(start = 4.dp, bottom = 2.dp))
-                MiniLinha(Icons.Filled.Folder, Lx.ouro, "Férias 2025", "Pictures")
-                MiniLinha(Icons.Filled.Image, Color(0xFFC08BFF), "ferias-praia.jpg", "Pictures/Férias 2025")
-                MiniLinha(Icons.Filled.VideoFile, Color(0xFFFF6E8A), "ferias-serra.mp4", "PC-SALA › Vídeos/2024")
-                MiniLinha(Icons.Filled.Image, Color(0xFFC08BFF), "ferias-familia.png", "NAS-CASA › Fotos")
+                Text(stringResource(R.string.g_resultados).uppercase(), style = Lx.tituloSecao.copy(fontSize = 8.sp), modifier = Modifier.padding(start = 4.dp, bottom = 2.dp))
+                MiniLinha(Icons.Filled.Folder, Lx.ouro, stringResource(R.string.g_ferias_pasta), "Pictures")
+                MiniLinha(Icons.Filled.Image, Color(0xFFC08BFF), stringResource(R.string.g_ferias_praia), "Pictures/" + stringResource(R.string.g_ferias_pasta))
+                MiniLinha(Icons.Filled.VideoFile, Color(0xFFFF6E8A), stringResource(R.string.g_ferias_serra), stringResource(R.string.g_pc) + " › " + stringResource(R.string.g_videos_2024))
+                MiniLinha(Icons.Filled.Image, Color(0xFFC08BFF), stringResource(R.string.g_ferias_familia), stringResource(R.string.g_nas) + " › " + stringResource(R.string.g_fotos))
             }
         }
     }
@@ -891,14 +879,14 @@ private fun CenaPro() {
             Column(Modifier.padding(start = 14.dp)) {
                 Text(
                     when (val e = estado) {
-                        Pro.Estado.Comprado -> "Pro ativo"
-                        is Pro.Estado.Teste -> "${e.diasRestantes} dia${if (e.diasRestantes == 1) "" else "s"} grátis"
-                        Pro.Estado.Expirado -> "Teste encerrado"
+                        Pro.Estado.Comprado -> stringResource(R.string.g_pro_ativo)
+                        is Pro.Estado.Teste -> pluralStringResource(R.plurals.g_dias_gratis, e.diasRestantes, e.diasRestantes)
+                        Pro.Estado.Expirado -> stringResource(R.string.g_teste_encerrado)
                     },
                     fontSize = 24.sp, fontWeight = FontWeight.ExtraBold, color = Lx.ouro,
                 )
                 Text(
-                    (situacao as? Loja.Situacao.Pronta)?.let { "depois, ${it.preco} — uma vez só" } ?: "depois, uma compra única",
+                    (situacao as? Loja.Situacao.Pronta)?.let { stringResource(R.string.g_depois_preco, it.preco) } ?: stringResource(R.string.g_depois),
                     fontSize = 12.sp, color = Lx.apagado,
                 )
             }
@@ -908,14 +896,14 @@ private fun CenaPro() {
                 AnimatedVisibility(passo >= i, enter = fadeIn(tween(300)) + slideInHorizontally { -it / 8 }, exit = fadeOut()) {
                     Row(Modifier.padding(horizontal = 12.dp, vertical = 5.dp), verticalAlignment = Alignment.CenterVertically) {
                         Selo(Lx.ouro, 26.dp, 8.dp) { Icon(icone, null, tint = Lx.ouro, modifier = Modifier.size(14.dp)) }
-                        Text(texto, fontSize = 11.sp, modifier = Modifier.padding(start = 10.dp))
+                        Text(stringResource(texto), fontSize = 11.sp, modifier = Modifier.padding(start = 10.dp))
                     }
                 }
             }
         }
         Row(Modifier.padding(top = 10.dp), verticalAlignment = Alignment.CenterVertically) {
             Selo(Lx.apagado, 20.dp, 6.dp) { Icon(Icons.Filled.Tv, null, tint = Lx.apagado, modifier = Modifier.size(11.dp)) }
-            Text("Grátis para sempre: os arquivos da TV e do pendrive", fontSize = 10.sp, color = Lx.tenue, modifier = Modifier.padding(start = 8.dp))
+            Text(stringResource(R.string.g_gratis_sempre), fontSize = 10.sp, color = Lx.tenue, modifier = Modifier.padding(start = 8.dp))
         }
     }
 }

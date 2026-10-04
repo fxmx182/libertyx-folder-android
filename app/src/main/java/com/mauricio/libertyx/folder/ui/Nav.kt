@@ -1,6 +1,7 @@
 package com.mauricio.libertyx.folder.ui
 
 import android.content.Context
+import com.mauricio.libertyx.folder.R
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.runtime.getValue
@@ -35,7 +36,9 @@ sealed class Screen {
 /** Itens escolhidos em "Mover"/"Copiar", esperando a pasta de destino. */
 data class Clip(val itens: List<FileEntry>, val mover: Boolean)
 
-enum class Sort(val titulo: String) { Name("Nome"), Date("Data"), Size("Tamanho"), Type("Tipo") }
+enum class Sort(@param:androidx.annotation.StringRes val titulo: Int) {
+    Name(R.string.sort_nome), Date(R.string.sort_data), Size(R.string.sort_tamanho), Type(R.string.sort_tipo),
+}
 
 class MainVm : ViewModel() {
     val stack = mutableStateListOf<Screen>(Screen.Home())

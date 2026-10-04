@@ -1,6 +1,8 @@
 package com.mauricio.libertyx.folder.vault
 
 import java.io.File
+import com.mauricio.libertyx.folder.Textos
+import com.mauricio.libertyx.folder.R
 import java.io.IOException
 import java.io.InputStream
 import java.io.OutputStream
@@ -52,7 +54,7 @@ object VaultCrypto {
     /** Tamanho do conteúdo original, deduzido do tamanho do arquivo cifrado. */
     fun plainSize(cifradoLen: Long): Long {
         val corpo = cifradoLen - HEADER
-        if (corpo < TAG) throw IOException("Arquivo cifrado corrompido")
+        if (corpo < TAG) throw IOException(Textos.get(R.string.cofre_corrompido))
         val cheio = (CHUNK + TAG).toLong()
         val n = maxOf(1L, (corpo + cheio - 1) / cheio)
         return corpo - n * TAG
@@ -107,7 +109,7 @@ object VaultCrypto {
         init {
             val magic = ByteArray(4)
             raf.readFully(magic)
-            if (!magic.contentEquals(MAGIC)) throw IOException("Arquivo cifrado inválido")
+            if (!magic.contentEquals(MAGIC)) throw IOException(Textos.get(R.string.cofre_invalido))
             raf.readFully(prefix)
             size = plainSize(raf.length())
             chunks = maxOf(1, ((size + CHUNK - 1) / CHUNK).toInt())
@@ -122,7 +124,7 @@ object VaultCrypto {
             cacheLen = try {
                 cipher(Cipher.DECRYPT_MODE, key, prefix, i, i == chunks - 1).doFinal(cifrado, 0, n, cache, 0)
             } catch (e: Exception) {
-                throw IOException("Falha de integridade no arquivo cifrado", e)
+                throw IOException(Textos.get(R.string.cofre_integridade), e)
             }
             cacheIndex = i
         }

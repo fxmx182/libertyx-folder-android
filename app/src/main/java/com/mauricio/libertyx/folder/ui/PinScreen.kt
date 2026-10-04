@@ -1,6 +1,9 @@
 package com.mauricio.libertyx.folder.ui
 
 import android.widget.Toast
+import androidx.compose.ui.res.stringResource
+import com.mauricio.libertyx.folder.Textos
+import com.mauricio.libertyx.folder.R
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -122,13 +125,13 @@ fun PinScreen(vm: MainVm, screen: Screen.Pin) {
         when (r) {
             Vault.Resultado.Ok -> concluir()
             is Vault.Resultado.Errado -> {
-                erro = (if (ehPin) "PIN incorreto" else "Senha incorreta") +
-                    (r.restantes?.let { " · a pasta será apagada em $it tentativa${if (it == 1) "" else "s"}" } ?: "")
+                erro = Textos.get(if (ehPin) R.string.pin_incorreto else R.string.senha_incorreta) +
+                    (r.restantes?.let { Textos.plural(R.plurals.pin_restantes, it, it) } ?: "")
                 espera = Vault.esperaRestanteMs(); aoErrar(); tentativa++
             }
             is Vault.Resultado.Espere -> { espera = r.ms; tentativa++ }
             Vault.Resultado.Apagada -> {
-                Toast.makeText(ctx, "Tentativas esgotadas: a pasta segura foi apagada", Toast.LENGTH_LONG).show()
+                Toast.makeText(ctx, ctx.getString(R.string.pin_esgotadas), Toast.LENGTH_LONG).show()
                 vm.esquecerCofre(); vm.home()
             }
         }
@@ -136,7 +139,7 @@ fun PinScreen(vm: MainVm, screen: Screen.Pin) {
 
     fun confirmar() {
         val v = valor
-        if (v.length < minimo) { erro = "Use pelo menos $minimo ${if (ehPin) "dígitos" else "caracteres"}"; return }
+        if (v.length < minimo) { erro = Textos.plural(if (ehPin) R.plurals.pin_minimo_digitos else R.plurals.pin_minimo_caracteres, minimo, minimo); return }
         erro = null
         when (etapa) {
             "atual" -> {
@@ -149,7 +152,7 @@ fun PinScreen(vm: MainVm, screen: Screen.Pin) {
             }
             "novo" -> { primeiro = v; valor = ""; etapa = "confirmar" }
             "confirmar" -> {
-                if (v != primeiro) { erro = "Não conferem. Digite de novo."; valor = ""; etapa = "novo"; return }
+                if (v != primeiro) { erro = Textos.get(R.string.pin_nao_conferem); valor = ""; etapa = "novo"; return }
                 ocupado = true
                 scope.launch {
                     val r = withContext(Dispatchers.Default) {
@@ -158,7 +161,7 @@ fun PinScreen(vm: MainVm, screen: Screen.Pin) {
                     }
                     ocupado = false; valor = ""
                     if (r == Vault.Resultado.Ok && screen.modo == PinModo.Trocar) {
-                        Toast.makeText(ctx, if (tipoNovo == Vault.Tipo.Pin) "PIN alterado" else "Senha alterada", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(ctx, ctx.getString(if (tipoNovo == Vault.Tipo.Pin) R.string.pin_alterado else R.string.senha_alterada), Toast.LENGTH_SHORT).show()
                     }
                     tratar(r) { etapa = "atual" }
                 }
@@ -177,13 +180,13 @@ fun PinScreen(vm: MainVm, screen: Screen.Pin) {
     }
 
     val titulo = when (etapa) {
-        "atual" -> if (ehPin) "Digite o PIN atual" else "Digite a senha atual"
+        "atual" -> stringResource(if (ehPin) R.string.pin_atual else R.string.senha_atual)
         "novo" -> when {
-            screen.modo == PinModo.Criar -> if (ehPin) "Crie o PIN da pasta segura" else "Crie a senha da pasta segura"
-            else -> if (ehPin) "Digite o novo PIN" else "Digite a nova senha"
+            screen.modo == PinModo.Criar -> stringResource(if (ehPin) R.string.pin_criar else R.string.senha_criar)
+            else -> stringResource(if (ehPin) R.string.pin_novo else R.string.senha_nova)
         }
-        "confirmar" -> if (ehPin) "Confirme o PIN" else "Confirme a senha"
-        else -> if (screen.modo == PinModo.Confirmar) "Confirme para continuar" else "Pasta segura"
+        "confirmar" -> stringResource(if (ehPin) R.string.pin_confirme else R.string.senha_confirme)
+        else -> stringResource(if (screen.modo == PinModo.Confirmar) R.string.pin_confirme_continuar else R.string.cofre_nome)
     }
 
     Column(
@@ -192,7 +195,7 @@ fun PinScreen(vm: MainVm, screen: Screen.Pin) {
     ) {
         Row(Modifier.fillMaxWidth()) {
             IconButton(modifier = Modifier.tvFocus(24.dp), onClick = { teclado?.hide(); vm.pop() }) {
-                Icon(Icons.AutoMirrored.Filled.ArrowBack, "Voltar")
+                Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.voltar))
             }
         }
         Column(
@@ -213,8 +216,8 @@ fun PinScreen(vm: MainVm, screen: Screen.Pin) {
             val ajuda = when {
                 espera > 0 -> null
                 screen.modo == PinModo.Criar && etapa == "novo" ->
-                    "Os arquivos são cifrados com AES-256. Sem ${if (ehPin) "o PIN" else "a senha"} não há como recuperá-los."
-                screen.modo == PinModo.Confirmar -> "Por segurança, digite ${if (ehPin) "o PIN" else "a senha"} de novo."
+                    stringResource(if (ehPin) R.string.pin_ajuda_criar_pin else R.string.pin_ajuda_criar_senha)
+                screen.modo == PinModo.Confirmar -> stringResource(if (ehPin) R.string.pin_ajuda_confirmar_pin else R.string.pin_ajuda_confirmar_senha)
                 else -> null
             }
             if (ajuda != null) Text(ajuda, color = Lx.apagado, textAlign = TextAlign.Center, fontSize = 14.sp)
@@ -225,7 +228,7 @@ fun PinScreen(vm: MainVm, screen: Screen.Pin) {
                     val limpo = if (ehPin) novo.filter(Char::isDigit).take(16) else novo.take(64)
                     valor = limpo; erro = null
                 },
-                label = { Text(if (ehPin) "PIN" else "Senha") },
+                label = { Text(stringResource(if (ehPin) R.string.pin_rotulo else R.string.senha_rotulo)) },
                 singleLine = true,
                 enabled = espera <= 0,
                 readOnly = ocupado,
@@ -237,7 +240,7 @@ fun PinScreen(vm: MainVm, screen: Screen.Pin) {
                 keyboardActions = KeyboardActions(onDone = { confirmar() }),
                 trailingIcon = {
                     IconButton(modifier = Modifier.tvFocus(24.dp), onClick = { ver = !ver }) {
-                        Icon(if (ver) Icons.Filled.VisibilityOff else Icons.Filled.Visibility, if (ver) "Ocultar" else "Mostrar")
+                        Icon(if (ver) Icons.Filled.VisibilityOff else Icons.Filled.Visibility, stringResource(if (ver) R.string.ocultar else R.string.mostrar))
                     }
                 },
                 isError = erro != null,
@@ -249,7 +252,7 @@ fun PinScreen(vm: MainVm, screen: Screen.Pin) {
                 modifier = Modifier.fillMaxWidth().focusRequester(foco),
             )
             val aviso = when {
-                espera > 0 -> "Muitas tentativas. Tente de novo em ${(espera + 999) / 1000} s"
+                espera > 0 -> stringResource(R.string.pin_espera, ((espera + 999) / 1000).toInt())
                 else -> erro
             }
             if (aviso != null) Text(aviso, color = MaterialTheme.colorScheme.error, textAlign = TextAlign.Center, fontSize = 14.sp)
@@ -260,24 +263,24 @@ fun PinScreen(vm: MainVm, screen: Screen.Pin) {
                 enabled = valor.length >= minimo && espera <= 0,
                 modifier = Modifier.fillMaxWidth().tvFocus(24.dp),
             ) {
-                Text(when (etapa) { "entrar" -> if (screen.modo == PinModo.Confirmar) "Confirmar" else "Desbloquear"; "confirmar" -> "Salvar"; else -> "Continuar" })
+                Text(stringResource(when (etapa) { "entrar" -> if (screen.modo == PinModo.Confirmar) R.string.confirmar else R.string.desbloquear; "confirmar" -> R.string.salvar; else -> R.string.continuar }))
             }
 
             // Tipo: só na hora de escolher um novo.
             if (etapa == "novo") TextButton(
                 onClick = { tipoNovo = if (tipoNovo == Vault.Tipo.Pin) Vault.Tipo.Senha else Vault.Tipo.Pin; valor = ""; erro = null },
                 modifier = Modifier.tvFocus(24.dp),
-            ) { Text(if (tipoNovo == Vault.Tipo.Pin) "Usar senha com letras" else "Usar PIN numérico") }
+            ) { Text(stringResource(if (tipoNovo == Vault.Tipo.Pin) R.string.pin_usar_senha else R.string.pin_usar_pin)) }
 
             if (screen.modo == PinModo.Desbloquear) TextButton(onClick = { apagar = true }, Modifier.tvFocus(24.dp)) {
-                Text("Esqueci ${if (ehPin) "o PIN" else "a senha"}")
+                Text(stringResource(if (ehPin) R.string.pin_esqueci else R.string.senha_esqueci))
             }
         }
     }
 
     if (apagar) ConfirmDialog(
-        "Apagar a pasta segura?",
-        "Sem ${if (ehPin) "o PIN" else "a senha"} não existe forma de decifrar os arquivos. A única saída é apagar a pasta segura com tudo o que está nela.",
-        "Apagar tudo", { apagar = false },
+        stringResource(R.string.pin_apagar_titulo),
+        stringResource(if (ehPin) R.string.pin_apagar_texto_pin else R.string.pin_apagar_texto_senha),
+        stringResource(R.string.apagar_tudo), { apagar = false },
     ) { apagar = false; Vault.erase(); teclado?.hide(); vm.esquecerCofre() }
 }

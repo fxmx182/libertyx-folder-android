@@ -1,6 +1,8 @@
 package com.mauricio.libertyx.folder.vault
 
 import android.content.Context
+import com.mauricio.libertyx.folder.Textos
+import com.mauricio.libertyx.folder.R
 import android.security.keystore.KeyGenParameterSpec
 import android.security.keystore.KeyProperties
 import android.util.Base64
@@ -58,7 +60,7 @@ object Vault {
 
     val versao = MutableStateFlow(0)
 
-    fun key(): SecretKey = master ?: throw IOException("A pasta segura está bloqueada")
+    fun key(): SecretKey = master ?: throw IOException(Textos.get(R.string.cofre_bloqueada))
 
     @Synchronized fun snapshot(): List<Item> = itens.values.toList()
     @Synchronized fun get(path: String): Item? = itens[path]
@@ -81,9 +83,9 @@ object Vault {
     }
 
     @Synchronized fun move(de: String, para: String) {
-        if (itens.containsKey(para)) throw IOException("Já existe um item com esse nome")
+        if (itens.containsKey(para)) throw IOException(Textos.get(R.string.err_nome_existe))
         val alvo = itens.keys.filter { it == de || it.startsWith("$de/") }
-        if (alvo.isEmpty()) throw IOException("Item não encontrado")
+        if (alvo.isEmpty()) throw IOException(Textos.get(R.string.cofre_item_nao_achado))
         val movidos = alvo.map { k -> itens.remove(k)!!.let { it.copy(path = para + k.removePrefix(de)) } }
         movidos.forEach { put(it) }
         salvarIndice()
@@ -101,7 +103,7 @@ object Vault {
         VaultCrypto.encryptingStream(tmp.outputStream(), VaultCrypto.fileKey(key(), "indice")).use {
             it.write(arr.toString().toByteArray())
         }
-        if (!tmp.renameTo(indexFile)) throw IOException("Falha ao gravar o índice")
+        if (!tmp.renameTo(indexFile)) throw IOException(Textos.get(R.string.cofre_falha_indice))
         versao.value++
     }
 
@@ -163,7 +165,7 @@ object Vault {
             meta.put("dados", b64(embrulho))
         }
         val tmp = File(dir, "cofre.tmp"); tmp.writeText(meta.toString())
-        if (!tmp.renameTo(metaFile)) throw IOException("Falha ao gravar a pasta segura")
+        if (!tmp.renameTo(metaFile)) throw IOException(Textos.get(R.string.cofre_falha_gravar))
     }
 
     /** PIN só com números (teclado numérico) ou senha com letras (teclado completo). */

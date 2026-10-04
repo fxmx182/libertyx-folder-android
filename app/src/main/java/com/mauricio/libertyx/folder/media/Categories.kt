@@ -1,15 +1,18 @@
 package com.mauricio.libertyx.folder.media
 
 import android.content.Context
+import androidx.annotation.StringRes
+import com.mauricio.libertyx.folder.R
 import android.provider.MediaStore
 import com.mauricio.libertyx.folder.fs.FileEntry
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
 
-enum class Category(val titulo: String) {
-    Images("Imagens"), Videos("Vídeos"), Audio("Áudio"), Documents("Documentos"),
-    Downloads("Downloads"), Apks("Arquivos de instalação"), Compressed("Compactados"),
+/** [titulo] na tela da categoria; [curto] no ladrilho do início, onde o espaço é pouco. */
+enum class Category(@param:StringRes val titulo: Int, @param:StringRes val curto: Int = titulo) {
+    Images(R.string.cat_imagens), Videos(R.string.cat_videos), Audio(R.string.cat_audio), Documents(R.string.cat_documentos),
+    Downloads(R.string.cat_downloads), Apks(R.string.cat_apks, R.string.cat_apks_curto), Compressed(R.string.cat_compactados),
 }
 
 /** As categorias vêm do índice do sistema (MediaStore) — varrer o disco a cada abertura seria lento. */

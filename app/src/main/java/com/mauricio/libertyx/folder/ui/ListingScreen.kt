@@ -1,6 +1,10 @@
 package com.mauricio.libertyx.folder.ui
 
 import android.widget.Toast
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
+import com.mauricio.libertyx.folder.Textos
+import com.mauricio.libertyx.folder.R
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -153,10 +157,10 @@ fun ListingScreen(vm: MainVm, screen: Screen) {
     val titulo = when (screen) {
         is Screen.Folder -> when (val l = screen.loc) {
             is Loc.Local -> if (l.path == l.root) Storage.volumes(ctx).firstOrNull { it.path == l.root }?.name ?: l.path else l.name
-            is Loc.Smb -> if (l.isServerRoot) servidor?.name ?: "Servidor" else l.name
-            is Loc.Vault -> if (l.path.isEmpty()) "Pasta segura" else l.name
+            is Loc.Smb -> if (l.isServerRoot) servidor?.name ?: stringResource(R.string.servidor) else l.name
+            is Loc.Vault -> if (l.path.isEmpty()) stringResource(R.string.cofre_nome) else l.name
         }
-        is Screen.Cat -> screen.cat.titulo
+        is Screen.Cat -> stringResource(screen.cat.titulo)
         is Screen.Search -> "“${screen.termo}”"
         else -> ""
     }
@@ -184,15 +188,15 @@ fun ListingScreen(vm: MainVm, screen: Screen) {
                     navigationIcon = {
                         IconButton(modifier = Modifier.tvFocus(24.dp), onClick = {
                             when { selecionando -> sel.clear(); filtrando -> { filtrando = false; filtro = "" }; else -> vm.pop() }
-                        }) { Icon(if (selecionando) Icons.Filled.Close else Icons.AutoMirrored.Filled.ArrowBack, "Voltar") }
+                        }) { Icon(if (selecionando) Icons.Filled.Close else Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.voltar)) }
                     },
                     title = {
                         when {
-                            selecionando -> Text("${sel.size} selecionado${if (sel.size > 1) "s" else ""}")
+                            selecionando -> Text(pluralStringResource(R.plurals.n_selecionados, sel.size, sel.size))
                             filtrando -> {
                                 val foco = remember { FocusRequester() }
                                 TextField(
-                                    filtro, { filtro = it }, placeholder = { Text("Pesquisar nesta pasta") }, singleLine = true,
+                                    filtro, { filtro = it }, placeholder = { Text(stringResource(R.string.pesquisar_pasta)) }, singleLine = true,
                                     modifier = Modifier.fillMaxWidth().focusRequester(foco),
                                     colors = TextFieldDefaults.colors(
                                         focusedContainerColor = Color.Transparent, unfocusedContainerColor = Color.Transparent,
@@ -210,34 +214,34 @@ fun ListingScreen(vm: MainVm, screen: Screen) {
                         if (selecionando) {
                             TextButton(modifier = Modifier.tvFocus(24.dp), onClick = {
                                 if (sel.size == mostrados.size) sel.clear() else mostrados.forEach { sel[it.loc] = it }
-                            }) { Text(if (sel.size == mostrados.size) "Nenhum" else "Tudo") }
+                            }) { Text(stringResource(if (sel.size == mostrados.size) R.string.sel_nenhum else R.string.sel_tudo)) }
                         } else if (filtrando) {
                             if (pasta != null && filtro.isNotBlank()) IconButton(modifier = Modifier.tvFocus(24.dp), onClick = {
                                 vm.push(Screen.Search(filtro.trim(), pasta)); filtrando = false; filtro = ""
-                            }) { Icon(Icons.Filled.SubdirectoryArrowRight, "Pesquisar nas subpastas") }
+                            }) { Icon(Icons.Filled.SubdirectoryArrowRight, stringResource(R.string.pesquisar_subpastas)) }
                         } else {
-                            if (screen !is Screen.Search) IconButton(modifier = Modifier.tvFocus(24.dp), onClick = { filtrando = true }) { Icon(Icons.Filled.Search, "Pesquisar") }
+                            if (screen !is Screen.Search) IconButton(modifier = Modifier.tvFocus(24.dp), onClick = { filtrando = true }) { Icon(Icons.Filled.Search, stringResource(R.string.pesquisar)) }
                             IconButton(modifier = Modifier.tvFocus(24.dp), onClick = { Prefs.grid = !Prefs.grid }) {
-                                Icon(if (Prefs.grid) Icons.Filled.ViewList else Icons.Filled.GridView, "Visualização")
+                                Icon(if (Prefs.grid) Icons.Filled.ViewList else Icons.Filled.GridView, stringResource(R.string.visualizacao))
                             }
                             Box {
-                                IconButton(modifier = Modifier.tvFocus(24.dp), onClick = { menu = true }) { Icon(Icons.Filled.MoreVert, "Mais") }
+                                IconButton(modifier = Modifier.tvFocus(24.dp), onClick = { menu = true }) { Icon(Icons.Filled.MoreVert, stringResource(R.string.mais)) }
                                 DropdownMenu(menu, { menu = false }) {
                                     val podeCriar = pasta != null && !(pasta is Loc.Smb && pasta.isServerRoot)
-                                    if (podeCriar) DropdownMenuItem({ Text("Nova pasta") }, { menu = false; dialogo = "nova" })
-                                    DropdownMenuItem({ Text("Selecionar") }, { menu = false; mostrados.firstOrNull()?.let { sel[it.loc] = it } })
-                                    DropdownMenuItem({ Text("Ordenar e exibir") }, { menu = false; dialogo = "ordenar" })
-                                    DropdownMenuItem({ Text("Atualizar") }, { menu = false; recarga++ })
-                                    if (pasta is Loc.Smb) DropdownMenuItem({ Text("Desconectar e reconectar") }, {
+                                    if (podeCriar) DropdownMenuItem({ Text(stringResource(R.string.nova_pasta)) }, { menu = false; dialogo = "nova" })
+                                    DropdownMenuItem({ Text(stringResource(R.string.selecionar)) }, { menu = false; mostrados.firstOrNull()?.let { sel[it.loc] = it } })
+                                    DropdownMenuItem({ Text(stringResource(R.string.ordenar_exibir)) }, { menu = false; dialogo = "ordenar" })
+                                    DropdownMenuItem({ Text(stringResource(R.string.atualizar)) }, { menu = false; recarga++ })
+                                    if (pasta is Loc.Smb) DropdownMenuItem({ Text(stringResource(R.string.reconectar)) }, {
                                         menu = false; com.mauricio.libertyx.folder.smb.SmbFs.forget(pasta.serverId); recarga++
                                     })
                                     if (pasta is Loc.Vault) {
-                                        DropdownMenuItem({ Text("Configurações da pasta segura") }, { menu = false; vm.push(Screen.Settings()) })
-                                        DropdownMenuItem({ Text("Bloquear pasta segura") }, {
+                                        DropdownMenuItem({ Text(stringResource(R.string.cofre_config)) }, { menu = false; vm.push(Screen.Settings()) })
+                                        DropdownMenuItem({ Text(stringResource(R.string.cofre_bloquear)) }, {
                                             menu = false; com.mauricio.libertyx.folder.vault.Vault.lock(); vm.esquecerCofre()
                                         })
                                     }
-                                    DropdownMenuItem({ Text("Início") }, { menu = false; vm.home() })
+                                    DropdownMenuItem({ Text(stringResource(R.string.inicio)) }, { menu = false; vm.home() })
                                 }
                             }
                         }
@@ -287,22 +291,22 @@ fun ListingScreen(vm: MainVm, screen: Screen) {
                 itens == null && carregando -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         CircularProgressIndicator()
-                        if (pasta is Loc.Smb) Text("Conectando a ${servidor?.name ?: "servidor"}…", Modifier.padding(top = 16.dp),
+                        if (pasta is Loc.Smb) Text(stringResource(R.string.conectando_a, servidor?.name ?: stringResource(R.string.servidor)), Modifier.padding(top = 16.dp),
                             color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                 }
                 erro != null -> LazyColumn(Modifier.fillMaxSize()) { item {
-                    EmptyState("Não foi possível abrir", erro, when {
-                        erro?.contains("negado") == true -> Icons.Filled.Lock
+                    EmptyState(stringResource(R.string.nao_abriu), erro, when {
+                        erro == Textos.get(R.string.smb_acesso_negado) -> Icons.Filled.Lock
                         pasta is Loc.Smb -> Icons.Filled.WifiOff
                         else -> Icons.Filled.FolderOff
                     })
                     Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-                        TextButton(modifier = Modifier.tvFocus(24.dp), onClick = { (pasta as? Loc.Smb)?.let { com.mauricio.libertyx.folder.smb.SmbFs.forget(it.serverId) }; recarga++ }) { Text("Tentar de novo") }
+                        TextButton(modifier = Modifier.tvFocus(24.dp), onClick = { (pasta as? Loc.Smb)?.let { com.mauricio.libertyx.folder.smb.SmbFs.forget(it.serverId) }; recarga++ }) { Text(stringResource(R.string.tentar_de_novo)) }
                     }
                 } }
                 mostrados.isEmpty() && !carregando -> LazyColumn(Modifier.fillMaxSize()) { item {
-                    EmptyState(if (filtro.isNotBlank() || screen is Screen.Search) "Nada encontrado" else "Nenhum arquivo")
+                    EmptyState(stringResource(if (filtro.isNotBlank() || screen is Screen.Search) R.string.nada_encontrado else R.string.nenhum_arquivo))
                 } }
                 Prefs.grid -> LazyVerticalGrid(
                     GridCells.Adaptive(112.dp), state = screen.gridState, modifier = Modifier.fillMaxSize(),
@@ -314,7 +318,7 @@ fun ListingScreen(vm: MainVm, screen: Screen) {
                 }
                 else -> LazyColumn(Modifier.fillMaxSize(), state = screen.listState, contentPadding = PaddingValues(bottom = 90.dp)) {
                     if (screen is Screen.Search && carregando) item {
-                        Text("Pesquisando…", Modifier.padding(20.dp, 8.dp), color = Lx.tenue)
+                        Text(stringResource(R.string.pesquisando), Modifier.padding(20.dp, 8.dp), color = Lx.tenue)
                     }
                     items(mostrados, key = { it.loc.toString() }) { e ->
                         val sub = if (screen is Screen.Folder) null else listOfNotNull(
@@ -335,22 +339,24 @@ fun ListingScreen(vm: MainVm, screen: Screen) {
 
     val alvo = sel.values.toList()
     when (dialogo) {
-        "nova" -> NameDialog("Nova pasta", "", "Criar", { dialogo = null }) { nome ->
+        "nova" -> NameDialog(stringResource(R.string.nova_pasta), "", stringResource(R.string.criar), { dialogo = null }) { nome ->
             dialogo = null
             scope.launch { runCatching { Fss.of(pasta!!).mkdir(pasta, nome) }.onSuccess { recarga++ }.onFailure(::erroToast) }
         }
         "renomear" -> alvo.singleOrNull()?.let { e ->
-            NameDialog("Renomear", e.name, "Renomear", { dialogo = null }) { nome ->
+            NameDialog(stringResource(R.string.renomear), e.name, stringResource(R.string.renomear), { dialogo = null }) { nome ->
                 dialogo = null; sel.clear()
                 scope.launch { runCatching { Fss.of(e.loc).rename(e.loc, nome) }.onSuccess { recarga++ }.onFailure(::erroToast) }
             }
         }
         "excluir" -> ConfirmDialog(
-            "Excluir ${if (alvo.size == 1) "item" else "${alvo.size} itens"}?",
-            if (alvo.any { it.loc is Loc.Smb }) "Os arquivos serão apagados do servidor. Isso não pode ser desfeito."
-            else if (alvo.any { it.loc is Loc.Vault }) "Os arquivos serão apagados da pasta segura. Isso não pode ser desfeito."
-            else "Isso não pode ser desfeito.",
-            "Excluir", { dialogo = null },
+            pluralStringResource(R.plurals.excluir_titulo, alvo.size, alvo.size),
+            stringResource(when {
+                alvo.any { it.loc is Loc.Smb } -> R.string.excluir_servidor
+                alvo.any { it.loc is Loc.Vault } -> R.string.excluir_cofre
+                else -> R.string.nao_desfaz
+            }),
+            stringResource(R.string.excluir), { dialogo = null },
         ) { dialogo = null; Ops.delete(ctx, alvo); sel.clear() }
         "detalhes" -> DetailsDialog(alvo) { dialogo = null }
         "ordenar" -> SortDialog { dialogo = null }
@@ -370,9 +376,9 @@ private fun Breadcrumbs(vm: MainVm, loc: Loc, nomeServidor: String?) {
     ) {
         cadeia.forEachIndexed { i, l ->
             val nome = when {
-                l is Loc.Local && l.path == l.root -> Storage.volumes(ctx).firstOrNull { it.path == l.root }?.name ?: "Raiz"
-                l is Loc.Smb && l.isServerRoot -> nomeServidor ?: "Servidor"
-                l is Loc.Vault && l.path.isEmpty() -> "Pasta segura"
+                l is Loc.Local && l.path == l.root -> Storage.volumes(ctx).firstOrNull { it.path == l.root }?.name ?: stringResource(R.string.raiz)
+                l is Loc.Smb && l.isServerRoot -> nomeServidor ?: stringResource(R.string.servidor)
+                l is Loc.Vault && l.path.isEmpty() -> stringResource(R.string.cofre_nome)
                 else -> l.name
             }
             val ultimo = i == cadeia.lastIndex
@@ -415,22 +421,22 @@ private fun SelectionBar(
         drawLine(Lx.vidroBorda, androidx.compose.ui.geometry.Offset(0f, 0f), androidx.compose.ui.geometry.Offset(size.width, 0f), 1f)
     }) {
         Row(Modifier.fillMaxWidth().navigationBarsPadding().padding(vertical = 4.dp), horizontalArrangement = Arrangement.SpaceEvenly) {
-            BarAction(Icons.Filled.DriveFileMove, "Mover", !temShare, onMover)
-            BarAction(Icons.Filled.ContentCopy, "Copiar", true, onCopiar)
-            BarAction(Icons.Filled.Share, "Compartilhar", itens.any { !it.isDir }, onShare)
-            BarAction(Icons.Filled.Delete, "Excluir", !temShare, onExcluir)
+            BarAction(Icons.Filled.DriveFileMove, stringResource(R.string.mover), !temShare, onMover)
+            BarAction(Icons.Filled.ContentCopy, stringResource(R.string.copiar), true, onCopiar)
+            BarAction(Icons.Filled.Share, stringResource(R.string.compartilhar), itens.any { !it.isDir }, onShare)
+            BarAction(Icons.Filled.Delete, stringResource(R.string.excluir), !temShare, onExcluir)
             Box {
-                BarAction(Icons.Filled.MoreVert, "Mais") { setMenu(true) }
+                BarAction(Icons.Filled.MoreVert, stringResource(R.string.mais)) { setMenu(true) }
                 DropdownMenu(menuAberto, { setMenu(false) }) {
-                    DropdownMenuItem({ Text("Renomear") }, { setMenu(false); onRenomear() }, enabled = itens.size == 1 && !temShare)
-                    DropdownMenuItem({ Text("Abrir com") }, { setMenu(false); onAbrirCom() }, enabled = itens.size == 1 && !itens[0].isDir)
+                    DropdownMenuItem({ Text(stringResource(R.string.renomear)) }, { setMenu(false); onRenomear() }, enabled = itens.size == 1 && !temShare)
+                    DropdownMenuItem({ Text(stringResource(R.string.abrir_com_item)) }, { setMenu(false); onAbrirCom() }, enabled = itens.size == 1 && !itens[0].isDir)
                     // Pasta oculta e bloqueada: a opção nem aparece, para não denunciar que ela existe.
                     // Na TV não há pasta segura: só "retirar", para quem tinha uma de antes.
                     if (noCofre || (com.mauricio.libertyx.folder.BuildConfig.PASTA_SEGURA &&
                             (com.mauricio.libertyx.folder.vault.Vault.visivel || com.mauricio.libertyx.folder.vault.Vault.unlocked.value)))
-                    DropdownMenuItem({ Text(if (noCofre) "Retirar da pasta segura" else "Mover para pasta segura") },
+                    DropdownMenuItem({ Text(stringResource(if (noCofre) R.string.cofre_retirar else R.string.cofre_mover)) },
                         { setMenu(false); onCofre() }, enabled = noCofre || (!temShare && itens.none { it.loc is Loc.Vault }))
-                    DropdownMenuItem({ Text("Detalhes") }, { setMenu(false); onDetalhes() })
+                    DropdownMenuItem({ Text(stringResource(R.string.detalhes)) }, { setMenu(false); onDetalhes() })
                 }
             }
         }
@@ -444,14 +450,14 @@ fun PasteBar(clip: Clip, habilitado: Boolean, onCancelar: () -> Unit, onColar: (
     }) {
         Column(Modifier.fillMaxWidth().navigationBarsPadding()) {
             Text(
-                "${if (clip.mover) "Mover" else "Copiar"} ${clip.itens.size} ${if (clip.itens.size == 1) "item" else "itens"} — abra a pasta de destino",
+                pluralStringResource(if (clip.mover) R.plurals.colar_mover else R.plurals.colar_copiar, clip.itens.size, clip.itens.size),
                 Modifier.padding(start = 20.dp, top = 12.dp, end = 20.dp), fontSize = 13.sp, color = Lx.apagado,
             )
             Row(Modifier.fillMaxWidth().padding(8.dp), horizontalArrangement = Arrangement.SpaceEvenly) {
-                TextButton(onClick = onCancelar, Modifier.weight(1f).tvFocus(24.dp)) { Text("Cancelar") }
+                TextButton(onClick = onCancelar, Modifier.weight(1f).tvFocus(24.dp)) { Text(stringResource(R.string.cancelar)) }
                 HorizontalDivider(Modifier.height(24.dp).size(1.dp, 24.dp).align(Alignment.CenterVertically))
                 TextButton(onClick = { onColar?.invoke() }, Modifier.weight(1f).tvFocus(24.dp), enabled = habilitado && onColar != null) {
-                    Text(if (clip.mover) "Mover para cá" else "Copiar para cá", fontWeight = FontWeight.Bold, color = Lx.ouro)
+                    Text(stringResource(if (clip.mover) R.string.mover_para_ca else R.string.copiar_para_ca), fontWeight = FontWeight.Bold, color = Lx.ouro)
                 }
             }
         }

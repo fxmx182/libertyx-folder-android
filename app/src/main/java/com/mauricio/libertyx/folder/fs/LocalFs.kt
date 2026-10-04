@@ -1,6 +1,8 @@
 package com.mauricio.libertyx.folder.fs
 
 import android.media.MediaScannerConnection
+import com.mauricio.libertyx.folder.Textos
+import com.mauricio.libertyx.folder.R
 import com.mauricio.libertyx.folder.App
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -24,7 +26,7 @@ object LocalFs : Fs {
 
     override suspend fun list(dir: Loc): List<FileEntry> = withContext(Dispatchers.IO) {
         val d = dir as Loc.Local
-        val files = d.file.listFiles() ?: throw IOException("Sem acesso a ${d.path}")
+        val files = d.file.listFiles() ?: throw IOException(Textos.get(R.string.local_sem_acesso, d.path))
         files.map { entry(d.child(it.name) as Loc.Local, it) }
     }
 
@@ -35,20 +37,20 @@ object LocalFs : Fs {
 
     override suspend fun mkdir(parent: Loc, name: String): Loc = withContext(Dispatchers.IO) {
         val c = parent.child(name)
-        if (!c.f().mkdirs() && !c.f().isDirectory) throw IOException("Não foi possível criar a pasta")
+        if (!c.f().mkdirs() && !c.f().isDirectory) throw IOException(Textos.get(R.string.local_criar_pasta))
         c
     }
 
     override suspend fun delete(loc: Loc) = withContext(Dispatchers.IO) {
         val f = loc.f()
-        if (!f.deleteRecursively()) throw IOException("Não foi possível apagar ${f.name}")
+        if (!f.deleteRecursively()) throw IOException(Textos.get(R.string.local_apagar, f.name))
         scan(f.path)
     }
 
     override suspend fun rename(loc: Loc, newName: String): Loc = withContext(Dispatchers.IO) {
         val dest = loc.parent()!!.child(newName)
-        if (dest.f().exists()) throw IOException("Já existe um item com esse nome")
-        if (!loc.f().renameTo(dest.f())) throw IOException("Não foi possível renomear")
+        if (dest.f().exists()) throw IOException(Textos.get(R.string.err_nome_existe))
+        if (!loc.f().renameTo(dest.f())) throw IOException(Textos.get(R.string.local_renomear))
         scan(loc.f().path, dest.f().path)
         dest
     }

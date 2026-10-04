@@ -1,6 +1,8 @@
 package com.mauricio.libertyx.folder.media
 
 import android.content.Context
+import com.mauricio.libertyx.folder.Textos
+import com.mauricio.libertyx.folder.R
 import android.os.Build
 import android.os.Environment
 import android.os.StatFs
@@ -22,7 +24,7 @@ object Storage {
             if (dir == null || !dir.canRead()) return@mapNotNull null
             val st = runCatching { StatFs(dir.path) }.getOrNull()
             Volume(
-                name = if (v.isPrimary) "Armazenamento interno" else v.getDescription(context) ?: dir.name,
+                name = if (v.isPrimary) Textos.get(R.string.vol_interno) else v.getDescription(context) ?: dir.name,
                 path = dir.path,
                 removable = v.isRemovable,
                 total = st?.totalBytes ?: 0,
@@ -32,7 +34,7 @@ object Storage {
         return lista.ifEmpty {
             val d = Environment.getExternalStorageDirectory()
             val st = StatFs(d.path)
-            listOf(Volume("Armazenamento interno", d.path, false, st.totalBytes, st.availableBytes))
+            listOf(Volume(Textos.get(R.string.vol_interno), d.path, false, st.totalBytes, st.availableBytes))
         }
     }
 
