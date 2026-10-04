@@ -6,6 +6,7 @@
     <string name="abrir_com_item">Open with</string>
     <string name="abrir_nenhum_app">No app can open this file</string>
     <string name="apagar_tudo">Erase everything</string>
+    <string name="apk_nao_instala">LibertyX Folder doesn’t install apps. To install this one, open it from your device’s file app or installer.</string>
     <string name="atualizar">Refresh</string>
     <string name="bloq_ao_sair">When leaving the app</string>
     <string name="buscar">Search</string>

@@ -5,6 +5,7 @@
     <string name="abrir_com_item">Abrir com</string>
     <string name="abrir_nenhum_app">Nenhum app abre este arquivo</string>
     <string name="apagar_tudo">Apagar tudo</string>
+    <string name="apk_nao_instala">O LibertyX Folder não instala apps. Para instalar este, abra o arquivo pelo app de arquivos ou instalador do aparelho.</string>
     <string name="atualizar">Atualizar</string>
     <string name="bloq_ao_sair">Ao sair do app</string>
     <string name="buscar">Buscar</string>

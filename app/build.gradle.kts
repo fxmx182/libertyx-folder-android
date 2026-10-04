@@ -13,7 +13,12 @@ android {
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.mauricio.libertyx.folder"
+        // Não é com.mauricio.libertyx.folder: em 2026-10-04 o Google Play
+        // Protect marcou aquele nome de pacote como nocivo ("pode instalar
+        // outros apps") — toda versão, qualquer chave —, e o mesmo código
+        // com outro nome passava. O código continua no pacote Kotlin
+        // com.mauricio.libertyx.folder; só a identidade do app mudou.
+        applicationId = "com.mauricio.libertyx.files"
         // 26 é onde nasce o `openProxyFileDescriptor`: é ele que deixa outro
         // app (player, visualizador de PDF) ler um arquivo do SMB aos pedaços,
         // com busca, sem baixar tudo antes.

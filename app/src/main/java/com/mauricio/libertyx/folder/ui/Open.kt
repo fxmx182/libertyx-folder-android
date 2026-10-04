@@ -20,6 +20,14 @@ object Open {
     }
 
     fun open(context: Context, e: FileEntry, escolher: Boolean = false) {
+        // O app não instala apps (não pede REQUEST_INSTALL_PACKAGES): sem a
+        // permissão, o instalador do sistema recusaria com um erro confuso.
+        // E foi justamente "pode instalar outros apps" o motivo do Play
+        // Protect para bloquear o pacote antigo.
+        if (Mime.kind(e) == Kind.Apk) {
+            Toast.makeText(context, context.getString(R.string.apk_nao_instala), Toast.LENGTH_LONG).show()
+            return
+        }
         val i = Intent(Intent.ACTION_VIEW)
             .setDataAndType(uri(context, e.loc), Mime.of(e.name))
             .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_ACTIVITY_NEW_TASK)

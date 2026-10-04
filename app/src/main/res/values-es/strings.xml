@@ -5,6 +5,7 @@
     <string name="abrir_com_item">Abrir con</string>
     <string name="abrir_nenhum_app">Ninguna app abre este archivo</string>
     <string name="apagar_tudo">Borrar todo</string>
+    <string name="apk_nao_instala">LibertyX Folder no instala apps. Para instalar este, ábrelo desde la app de archivos o el instalador del dispositivo.</string>
     <string name="atualizar">Actualizar</string>
     <string name="bloq_ao_sair">Al salir de la app</string>
     <string name="buscar">Buscar</string>
