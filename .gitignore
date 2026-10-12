@@ -4,3 +4,8 @@ app/build/
 local.properties
 dist/
 .kotlin/
+
+# Chaves de assinatura: ficam só na máquina, nunca no repositório, que é público.
+keystore/
+*.jks
+*.keystore
