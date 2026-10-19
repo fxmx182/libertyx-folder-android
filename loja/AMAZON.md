@@ -42,8 +42,9 @@ e por isso o build para com o aviso "Falta …pem".
 - IAP `libertyx_folder_pro` (Entitlement) "Ready to Submit": US$ 4.99 base
   (Japão ¥787, Brasil R$ 25,28, Europa € 4,44…).
 - Instruções para o revisor preenchidas.
-- **Falta (com o dono):** marcar *Export compliance*, *Submit IAP* e
-  *Submit App*.
+- **Enviado em 2026-10-19:** IAP "Submit to Test and Live" → *Approved*;
+  app *Submitted* (export compliance marcada com o OK do dono). Revisão da
+  Amazon: de alguns dias a 2 semanas.
 
 ## O que só o dono da conta faz
 
