@@ -116,8 +116,23 @@ android {
         // compra do Pro é pela Amazon Appstore (`src/tvAmazon`). O celular é
         // grátis nas duas lojas (no tablet Fire também), então para ele as duas
         // variantes são o mesmo app.
-        create("play") { dimension = "loja" }
-        create("amazon") { dimension = "loja" }
+        //
+        // A terceira, `github`: o APK de TV publicado no GitHub (Fire TV e quem
+        // instala à mão). Sem loja nenhuma, a compra é a chave LibertyX, paga
+        // com Bitcoin ou USDT pelo bot do Telegram. Na Play e na Amazon ela não
+        // existe: as duas proíbem outro meio de pagamento para liberar recurso.
+        create("play") {
+            dimension = "loja"
+            buildConfigField("boolean", "CHAVE_LIBERTYX", "false")
+        }
+        create("amazon") {
+            dimension = "loja"
+            buildConfigField("boolean", "CHAVE_LIBERTYX", "false")
+        }
+        create("github") {
+            dimension = "loja"
+            buildConfigField("boolean", "CHAVE_LIBERTYX", "true")
+        }
     }
 
     buildTypes {
@@ -190,6 +205,12 @@ android {
 // Na Amazon a assinatura não é a de envio da Play (que só serve para provar ao
 // Google quem enviou): é a mesma dos APKs instalados à mão.
 androidComponents {
+    // O celular é grátis: não há o que vender pelo GitHub, e o APK de celular
+    // continua sendo o da pasta dist/ (celularPlay).
+    beforeVariants { v ->
+        val sabores = v.productFlavors.map { it.second }
+        if ("github" in sabores && ("celular" in sabores || v.buildType == "loja")) v.enable = false
+    }
     onVariants(selector().withBuildType("loja")) { v ->
         if (v.productFlavors.any { it.second == "amazon" }) v.signingConfig.setConfig(android.signingConfigs.getByName("tv"))
     }
@@ -254,6 +275,7 @@ tasks.whenTaskAdded {
 // declarada antes; as de um sabor só (`tvImplementation`) nascem sozinhas.
 val tvPlayImplementation by configurations.creating
 val tvAmazonImplementation by configurations.creating
+val tvGithubImplementation by configurations.creating
 
 dependencies {
     implementation(libs.androidx.core.ktx)

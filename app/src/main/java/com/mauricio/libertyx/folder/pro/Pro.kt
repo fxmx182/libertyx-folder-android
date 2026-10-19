@@ -25,6 +25,11 @@ import kotlinx.coroutines.flow.asStateFlow
  * continuam inteiros. E a busca na rede continua achando os computadores — o
  * que se trava é abrir, não ver que eles estão lá.
  *
+ * **No APK do GitHub** ([BuildConfig.CHAVE_LIBERTYX]) a compra é a chave LibertyX, vendida
+ * com Bitcoin ou USDT pelo bot da loja no Telegram e conferida aqui, sem internet ([Chave]).
+ * É o que serve ao Fire TV e a quem não instala pela loja; na Play e na Amazon a compra é a
+ * da loja (regra delas).
+ *
  * Só existe na variante com [BuildConfig.PRO] (a TV); no celular, [ativo] é
  * sempre verdadeiro e nada disto aparece.
  */
@@ -44,6 +49,7 @@ object Pro {
     private const val ARQUIVO = "pro"
     private const val KEY_INICIO = "inicioDoTeste"
     private const val KEY_COMPRADO = "comprado"
+    private const val KEY_CHAVE = "chave"
 
     private lateinit var app: Context
     private val _estado = MutableStateFlow<Estado>(Estado.Comprado)
@@ -74,10 +80,28 @@ object Pro {
         recalcular()
     }
 
+    /**
+     * Ativa o Pro com a chave LibertyX. Guarda a chave inteira, e não um "ativado": a cada
+     * abertura ela é conferida de novo.
+     */
+    fun ativarChave(texto: String): Chave.Resultado {
+        val r = Chave.conferir(texto)
+        if (r is Chave.Resultado.Valida && BuildConfig.CHAVE_LIBERTYX) {
+            prefs().edit().putString(KEY_CHAVE, r.texto).apply()
+            recalcular()
+        }
+        return r
+    }
+
+    /** O número da licença ativada pela chave, para mostrar; null sem chave. */
+    val licencaDaChave: String?
+        get() = if (!BuildConfig.CHAVE_LIBERTYX) null
+        else prefs().getString(KEY_CHAVE, null)?.let { (Chave.conferir(it) as? Chave.Resultado.Valida)?.id }
+
     fun recalcular() {
         if (!BuildConfig.PRO) { _estado.value = Estado.Comprado; return }
         _estado.value = when {
-            BuildConfig.LIBERADO || prefs().getBoolean(KEY_COMPRADO, false) -> Estado.Comprado
+            BuildConfig.LIBERADO || prefs().getBoolean(KEY_COMPRADO, false) || licencaDaChave != null -> Estado.Comprado
             else -> {
                 val inicio = prefs().getLong(KEY_INICIO, System.currentTimeMillis())
                 // Relógio atrasado não vira dia negativo nem teste maior.

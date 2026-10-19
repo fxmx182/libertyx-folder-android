@@ -430,4 +430,23 @@
         <item quantity="one">La red está desbloqueada %1$d día más</item>
         <item quantity="other">La red está desbloqueada %1$d días más</item>
     </plurals>
+
+    <!-- Chave LibertyX (só no APK de TV do GitHub): compra com Bitcoin/USDT pelo Telegram -->
+    <string name="pro_telegram_tv">Paga con Bitcoin o USDT: en el móvil, abre %1$s en Telegram. La clave llega al instante.</string>
+    <string name="pro_tenho_chave">Tengo una clave</string>
+    <string name="pro_sub_ativo_chave">La red está desbloqueada para siempre en esta TV. Licencia %1$s.</string>
+    <string name="chave_titulo">Activar con una clave</string>
+    <string name="chave_tv_texto">En un móvil en la misma red Wi-Fi, abre esta dirección en el navegador y pega la clave que te envió el bot de LibertyX:</string>
+    <string name="chave_tv_sem_rede">Conecta la TV a la red de casa para activar desde el móvil.</string>
+    <string name="chave_ou_digite">O escribe la clave aquí:</string>
+    <string name="chave_campo">Clave (LXP1-…)</string>
+    <string name="chave_ativar">Activar</string>
+    <string name="chave_erro_formato">Eso no parece una clave completa. Cópiala de nuevo en Telegram y pégala entera.</string>
+    <string name="chave_erro_invalida">Esta clave no es válida. Revisa que la copiaste completa.</string>
+    <string name="chave_erro_outro_app">Esta clave es de otra app LibertyX, no de Folder.</string>
+    <string name="chave_erro_versao">Esta clave es de una versión más nueva. Actualiza la app e inténtalo de nuevo.</string>
+    <string name="chave_web_titulo">Activar LibertyX Folder Pro</string>
+    <string name="chave_web_texto">Pega la clave que el bot de LibertyX te envió por Telegram. La TV desbloquea Pro en cuanto toques el botón.</string>
+    <string name="chave_web_botao">Activar en la TV</string>
+    <string name="chave_web_ok">¡Listo! Pro está activo en tu TV. Puedes cerrar esta página.</string>
 </resources>
