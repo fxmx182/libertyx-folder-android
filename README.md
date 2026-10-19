@@ -23,11 +23,11 @@ Mesmo código, dois APKs (`productFlavors`): `dist/LibertyXFolder-Celular.apk` e
 
 | Chave | Celular | TV | O que faz |
 |---|---|---|---|
-| `PRO` | não | sim | 7 dias grátis e a rede como compra única (`pro/Pro.kt`, `pro/Loja.kt` só na TV) |
-| `PASTA_SEGURA` | sim | não | a TV não tem pasta segura; quem tinha uma acha em Configurações como esvaziá-la |
+| `PRO` | não | sim | 7 dias grátis e a rede como compra única (`pro/Pro.kt`, `pro/Loja.kt` só na TV); no celular tudo é grátis |
+| `PASTA_SEGURA` | não | não | nenhum dos dois tem pasta segura; quem tinha uma acha em Configurações como esvaziá-la |
 | `GUIA` | não | sim | o guia de uso de 10 páginas (`ui/Guia.kt`) na primeira abertura |
 
-A biblioteca de cobrança entra só no APK de TV (`tvImplementation`); no celular, `pro/Loja.kt` é um esboço com a mesma forma. O de TV declara `leanback` obrigatório, banner e `LEANBACK_LAUNCHER`. Sem biblioteca nativa, então serve a ARM 32/64 (Fire Stick) e x86. Os dois têm o mesmo pacote: um substitui o outro. O `leanback` obrigatório só filtra na loja; `adb install` instala qualquer um em qualquer aparelho.
+Há uma segunda dimensão de variante, a **loja** (`play` / `amazon`), e só a cobrança muda entre elas: a Google Play Billing na TV da Play (`src/tvPlay`, `tvPlayImplementation`), a Amazon Appstore SDK no Fire TV (`src/tvAmazon`, `tvAmazonImplementation`); no celular/tablet, grátis nas duas, `pro/Loja.kt` é um esboço com a mesma forma (`src/celular`). O de TV declara `leanback` obrigatório, banner e `LEANBACK_LAUNCHER`. Sem biblioteca nativa, então serve a ARM 32/64 (Fire Stick) e x86. Os dois têm o mesmo pacote: um substitui o outro, e na Play vão para a **mesma página**, na mesma versão (`./gradlew pacotesPlay` gera `dist/play/LibertyXFolder-Celular.aab` e `-TV.aab`). A Play entrega o pacote compatível de número mais alto: o celular só aceita o de celular (o de TV exige `leanback`), e na TV vence o de TV porque termina em 2 e o de celular em 1 — por isso os dois sobem sempre do mesmo `pacotesPlay`. O `leanback` obrigatório só filtra na loja; `adb install` instala qualquer um em qualquer aparelho.
 
 No controle remoto: realce de foco forte (`Tv.kt`), setas trocam de campo nos formulários, busca abre diálogo em vez de campo (focar campo abre o teclado), PIN aceita os números do controle pelo teclado do sistema, margem de segurança de 48 dp, sem "puxar para atualizar" (use Mais → Atualizar). Toque longo no botão central seleciona.
 
@@ -51,7 +51,8 @@ O modelo do LibertyX Player. Os arquivos da TV são grátis para sempre; a **red
 Terminado o teste, os computadores continuam aparecendo na tela inicial: o que trava é abrir, e quem tenta abrir cai na tela do Pro (`ui/ProScreen.kt`; o desvio fica no roteamento da `MainActivity`, então vale venha a pessoa por onde vier).
 
 - `dist/` (compilado aqui): Pro **liberado** (`BuildConfig.LIBERADO`).
-- `./gradlew bundleLoja` → `dist/play/LibertyXFolder-TV.aab`, assinado com a chave de envio, Pro travado.
+- `./gradlew pacotesPlay` → `dist/play/LibertyXFolder-{Celular,TV}.aab`, assinados com a chave de envio, Pro travado. (Não usar `bundleLoja`: ele gera também a variante Amazon.)
+- `./gradlew pacotesAmazon` → `dist/amazon/LibertyXFolder-FireTV.apk` (Pro pela Amazon) e `-FireTablet.apk` (grátis), assinados com `keystore/folder-tv.jks`, Pro travado. Exige `app/src/tvAmazon/assets/AppstoreAuthenticationKey.pem` (a chave pública que a Amazon gera para o app); sem ela o build para. Passo a passo em `loja/AMAZON.md`.
 - Testar a compra/o teste aqui: `-PlibertyxLoja` (trava) e `-PlibertyxDiasDeTeste=0` (teste vencido).
 - Lançamento: `loja/PASSO-A-PASSO.md`, `loja/FICHA.md`, imagens em `loja/imagens/`, política em `PRIVACY.md`.
 

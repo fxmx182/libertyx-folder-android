@@ -22,3 +22,9 @@
 # java.rmi não existe no Android: o dcerpc só o cita em caminhos de erro, e já
 # era assim sem o R8.
 -dontwarn java.rmi.**
+
+# Cobrança da Amazon (só na variante tvAmazon): a própria Amazon pede para não
+# encolher o SDK — ele acha as próprias classes por nome em tempo de execução.
+-dontwarn com.amazon.**
+-keep class com.amazon.** { *; }
+-keepattributes *Annotation*

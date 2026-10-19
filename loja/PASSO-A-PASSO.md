@@ -14,8 +14,43 @@ conta de desenvolvedor do LibertyX Player serve (não paga de novo).
   3979542, lista de testadores "Eu"); produto `libertyx_folder_pro` ativo a
   US$ 4,99; página da loja em português com textos, ícone, destaque, banner de TV
   e capturas (TV, e as mesmas nos campos obrigatórios de celular e tablet).
-- Falta: traduções da página (en/es), endereço público da política de
-  privacidade, questionários de "Conteúdo do app" e o teste fechado.
+- Traduções da página salvas: en-US, es-419, es-US (textos e imagens em
+  espanhol latino) e es-ES ("ordenador", "mando", "vídeos"); ícone, banner e
+  capturas de celular/tablet vêm da página padrão.
+- Política de privacidade publicada e salva no Console:
+  `https://github.com/fxmx182/LabPlayer/blob/main/Folder/PRIVACY.md` (cópia de
+  `../PRIVACY.md` no repositório do Player — ao mudar uma, mude a outra).
+- "Conteúdo do app" enviado (2026-10-04): login (nada restrito), sem anúncios,
+  sem ID de publicidade, público 18+, segurança dos dados (não coleta nem
+  compartilha), não é app de governo/finanças/saúde, acesso a todos os
+  arquivos (principal recurso; o SAF não existe em muitas TVs) e fotos/vídeos.
+  Categoria *Ferramentas*, e-mail de contato fxmx182@gmail.com.
+- Classificação de conteúdo (IARC) salva: "não" a tudo, **menos "compra de
+  artigos digitais" = sim** (o Pro). Resultado: Brasil 14 anos (ClassInd sobe
+  por causa da compra no app), ESRB livre, "Compras no aplicativo".
+- **Teste fechado "Alpha" enviado para revisão em 2026-10-04** (só TV, mesmo
+  pacote 3979542; 178 países; testadores = Grupo do Google
+  `testers-community@googlegroups.com`, do app Testers Community). Links de
+  inscrição, válidos depois da aprovação:
+  `https://play.google.com/apps/testing/com.mauricio.libertyx.files` (web) e
+  `https://play.google.com/store/apps/details?id=com.mauricio.libertyx.files`.
+  Aprovado em 2026-10-04 (só TV, 3979542).
+- **2026-10-05: celular entrou na mesma página.** Nova versão do teste fechado
+  com os dois pacotes do mesmo `bundleLoja` — celular 3994111 e TV 3994112 —
+  aprovada em 2026-10-05 18:28 (20.842 aparelhos). No celular tudo é grátis e não há pasta segura
+  (decisão do dono). Compatíveis: +11.301 celulares, +6.409 tablets, TV igual.
+- **Atualização nº 1 (1.0.1, 2026-10-07)** enviada para revisão: celular
+  4023171 + TV 4023172. Corrige o aviso do Console "androidx.fragment 1.1.0
+  desatualizado" (vinha da cobrança 8.3.0; agora o app declara fragment 1.8.9).
+  Plano do artigo do Testers Community: 3 versões ou mais durante os 14 dias,
+  com melhorias reais e notas nos 5 idiomas; relatório de pré-lançamento com
+  poucos problemas; respostas longas no formulário de produção.
+- Antes da produção: trocar as capturas de celular/tablet da página (hoje são
+  as da TV, só para preencher) por capturas reais do celular, e dizer na
+  descrição que no celular é tudo grátis.
+- Falta: aprovação da revisão, 12 inscritos por 14 dias seguidos e então o
+  pedido de acesso à produção. Serviço em primeiro plano declarado
+  como "Processamento de rede › Outro", vídeo https://youtu.be/74IHpfDLoqc.
 - **No Console em português, preço com vírgula:** "4.99" vira 499.
 
 ## O modelo
@@ -40,13 +75,13 @@ conta de desenvolvedor do LibertyX Player serve (não paga de novo).
 - ✅ Tela do Pro, selo "PRO GRÁTIS · N DIAS" no início, rede travada levando à
   tela do Pro, e o guia de uso de 10 páginas na primeira abertura (revisto em
   Configurações › Guia de uso).
-- ✅ `./gradlew bundleLoja` gera `dist/play/LibertyXFolder-TV.aab`, assinado
+- ✅ `./gradlew pacotesPlay` gera `dist/play/LibertyXFolder-{Celular,TV}.aab`, assinados
   com a **chave de envio** (a mesma do Player, em `/DATA/Claudinho/chaves/`).
   Nesse pacote o Pro nunca vem liberado.
 - ✅ Número de versão da TV termina em **2** (quando o celular entrar na mesma
   página, terminará em 1 — a Play recusa números repetidos).
-- ✅ Política de privacidade: [`../PRIVACY.md`](../PRIVACY.md). **Falta um
-  endereço público** para ela (ver passo 7).
+- ✅ Política de privacidade: [`../PRIVACY.md`](../PRIVACY.md). Publicada em
+  `github.com/fxmx182/LabPlayer/blob/main/Folder/PRIVACY.md`.
 - ✅ **Idiomas**: o app segue o idioma do aparelho — inglês (padrão para
   qualquer idioma sem tradução), português e espanhol; no Android 13+ dá para
   escolher um só para o app em Configurações › Apps › Idioma. O pacote leva os
@@ -74,16 +109,14 @@ conta de desenvolvedor do LibertyX Player serve (não paga de novo).
 6. **Países e traduções da página**: o app fala inglês, português e espanhol
    (e cai no inglês em qualquer outro idioma), então dá para distribuir em
    todos os países. Em *Página da loja › Gerenciar traduções*, acrescente
-   **inglês (en-US)** e **espanhol (es-419 e es-ES)** com os textos da `FICHA.md`
+   **inglês (en-US)** e **espanhol (es-419, es-ES e es-US)** com os textos da `FICHA.md`
    e as imagens `destaque-1024x500-en/es.png` e `tv-en-*` / `tv-es-*.jpg`.
 7. **Conteúdo do app** (*Política › Conteúdo do app*):
-   - *Política de privacidade*: precisa de um endereço público com o texto de
-     `PRIVACY.md` (já em inglês, português e espanhol). Opções: a pasta do LibertyX Player no GitHub (que já é
-     público), ou uma página no seu domínio.
+   - *Política de privacidade*: ✅ `https://github.com/fxmx182/LabPlayer/blob/main/Folder/PRIVACY.md`.
    - *Acesso ao app*: "Todas as funcionalidades estão disponíveis sem
      restrições" — o revisor usa os 7 dias de teste.
    - *Anúncios*: Não. *Público-alvo*: 18+. *Classificação*: questionário, tudo
-     "não".
+     "não" — menos "comprar artigos digitais", que é **sim** (o Pro).
    - *Segurança dos dados*: **não coleta nem compartilha dados**. Senhas de
      servidor ficam só no aparelho; a compra é processada pelo Google.
    - **Declarações de permissão** — o Console pede uma por uma:
@@ -112,16 +145,15 @@ conta de desenvolvedor do LibertyX Player serve (não paga de novo).
 ## Toda atualização depois disso
 
 ```bash
-./gradlew bundleLoja
+./gradlew pacotesPlay
 ```
 
-Suba `dist/play/LibertyXFolder-TV.aab` na faixa de Android TV.
+Suba **os dois** — `dist/play/LibertyXFolder-Celular.aab` e `LibertyXFolder-TV.aab` — na mesma versão.
 
 ## APKs da pasta `dist/`
 
 - Compilados nesta máquina: Pro **liberado** — são os seus.
 - Assinatura diferente da Play: o app da loja não instala por cima de um APK da
   pasta. Para trocar, desinstale antes.
-- **Fire TV** não tem Google Play: lá não há como comprar. Quem tem Fire TV usa
-  os 7 dias e depois só os arquivos da TV — a não ser que um dia o app vá
-  também para a Amazon Appstore (não feito).
+- **Fire TV** não tem Google Play: lá a compra é pela Amazon Appstore, com o
+  APK da Amazon (`./gradlew pacotesAmazon`, ver `AMAZON.md`).

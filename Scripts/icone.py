@@ -182,8 +182,11 @@ def render(s, w, h):
     return Image.open(io.BytesIO(bytes(resvg_py.svg_to_bytes(svg_string=s, width=w, height=h)))).convert("RGBA")
 
 
-def banner(W, H, slogan=None):
-    """A faixa da tela inicial da TV: símbolo + nome, o conjunto centrado."""
+def banner(W, H, slogan=None, escala=1.0):
+    """A faixa da tela inicial da TV: símbolo + nome, o conjunto centrado.
+
+    `escala` encolhe o conjunto sem mudar o fundo — o ícone do Fire TV pede a
+    arte dentro de uma área segura central (882×448 em 1280×720)."""
     S = 2; w, h = W * S, H * S
     vh = 320 * H / W
     fundo = render(f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 {vh:.2f}" width="{w}" height="{h}"><defs>'
@@ -192,15 +195,15 @@ def banner(W, H, slogan=None):
     sobe = int(h * 0.07) if slogan else 0
     m = render(svg(108, fundo=False), h * 2, h * 2)
     m = m.crop(m.getbbox())
-    alto = int(h * 0.56); m = m.resize((int(m.width * alto / m.height), alto), Image.LANCZOS)
+    alto = int(h * 0.56 * escala); m = m.resize((int(m.width * alto / m.height), alto), Image.LANCZOS)
     d = ImageDraw.Draw(fundo)
-    f1 = ImageFont.truetype(os.path.join(FONT, "manrope_extrabold.ttf"), int(h * 0.2))
-    f2 = ImageFont.truetype(os.path.join(FONT, "manrope_semibold.ttf"), int(h * 0.062))
+    f1 = ImageFont.truetype(os.path.join(FONT, "manrope_extrabold.ttf"), int(h * 0.2 * escala))
+    f2 = ImageFont.truetype(os.path.join(FONT, "manrope_semibold.ttf"), int(h * 0.062 * escala))
     larg_nome = d.textlength("LibertyX", font=f1)
-    vao = int(h * 0.09)
+    vao = int(h * 0.09 * escala)
     x = int((w - (m.width + vao + larg_nome)) // 2)
     fundo.alpha_composite(m, (x, (h - alto) // 2 - sobe))
-    x += m.width + vao; base = int(h * 0.54) - sobe
+    x += m.width + vao; base = int(h * (0.5 + 0.04 * escala)) - sobe
     d.text((x, base), "Liberty", font=f1, fill=(240, 240, 240), anchor="ls")
     x2 = x + d.textlength("Liberty", font=f1)
     d.text((x2, base), "X", font=f1, fill=(0xFB, 0xC5, 0x01), anchor="ls")
@@ -208,7 +211,7 @@ def banner(W, H, slogan=None):
     letras = "FOLDER"; larg = sum(d.textlength(c, font=f2) for c in letras)
     esp = (larg_nome - larg - 4) / (len(letras) - 1); cx = x + 3
     for ch in letras:
-        d.text((cx, base + int(h * 0.13)), ch, font=f2, fill=(235, 235, 245, 150), anchor="ls")
+        d.text((cx, base + int(h * 0.13 * escala)), ch, font=f2, fill=(235, 235, 245, 150), anchor="ls")
         cx += d.textlength(ch, font=f2) + esp
     if slogan:
         f3 = ImageFont.truetype(os.path.join(FONT, "manrope_semibold.ttf"), int(h * 0.07))
@@ -227,4 +230,36 @@ banner(1280, 720).save(os.path.join(LOJA, "tv-banner-1280x720.png"), optimize=Tr
 for pasta_dens, (W, H) in {"drawable-mdpi": (320, 180), "drawable-xhdpi": (640, 360)}.items():
     os.makedirs(os.path.join(TV, pasta_dens), exist_ok=True)
     banner(W, H).save(os.path.join(TV, pasta_dens, "tv_banner.png"), optimize=True)
+# Amazon Appstore (Fire TV e tablet Fire), em loja/imagens/amazon:
+# - ícone do Fire TV 1280×720, sem transparência, arte dentro de 882×448;
+# - fundo 1920×1080: a Amazon põe título e descrição à esquerda, então o
+#   símbolo vai para a direita do centro;
+# - ícones 512 e 114 com os cantos arredondados (transparentes).
+AMZ = os.path.join(LOJA, "amazon")
+os.makedirs(AMZ, exist_ok=True)
+banner(1280, 720, escala=0.72).save(os.path.join(AMZ, "firetv-icone-1280x720.png"), optimize=True)
+
+
+def fundo_amazon(W, H):
+    S = 2; w, h = W * S, H * S
+    vh = 320 * H / W
+    f = render(f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 {vh:.2f}" width="{w}" height="{h}"><defs>'
+               f'<radialGradient id="f" cx="205" cy="70" r="230" gradientUnits="userSpaceOnUse">{stops(FUNDO)}</radialGradient></defs>'
+               f'<rect width="320" height="{vh:.2f}" fill="url(#f)"/></svg>', w, h)
+    m = render(svg(108, fundo=False), h, h)
+    m = m.crop(m.getbbox())
+    alto = int(h * 0.5); m = m.resize((int(m.width * alto / m.height), alto), Image.LANCZOS)
+    # Um pouco apagado: é fundo, o texto da Amazon passa por cima.
+    m.putalpha(m.getchannel("A").point(lambda a: a * 0.85))
+    f.alpha_composite(m, (int(w * 0.64 - m.width / 2), (h - alto) // 2))
+    return f.resize((W, H), Image.LANCZOS).convert("RGB")
+
+
+fundo_amazon(1920, 1080).save(os.path.join(AMZ, "firetv-fundo-1920x1080.jpg"), quality=92)
+quadrado = Image.open(os.path.join(AQUI, "play-512.png")).convert("RGBA")
+mascara = Image.new("L", (512 * 4, 512 * 4), 0)
+ImageDraw.Draw(mascara).rounded_rectangle((0, 0, 512 * 4 - 1, 512 * 4 - 1), radius=int(512 * 4 * 0.2), fill=255)
+quadrado.putalpha(mascara.resize((512, 512), Image.LANCZOS))
+quadrado.save(os.path.join(AMZ, "icone-512.png"), optimize=True)
+quadrado.resize((114, 114), Image.LANCZOS).save(os.path.join(AMZ, "icone-114.png"), optimize=True)
 print("ok")

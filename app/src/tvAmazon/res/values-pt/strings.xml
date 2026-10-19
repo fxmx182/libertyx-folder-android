@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="guia10_ativo">O Pro está ativo: a rede é sua para sempre, em todos os Fire TV da sua conta Amazon.</string>
+    <string name="guia10_x">Os primeiros %1$d dias vêm com tudo liberado. Depois, os arquivos da TV continuam grátis para sempre, e a rede vira Pro: uma compra única, sem assinatura, válida em todos os Fire TV da sua conta Amazon.</string>
+    <string name="guia10_x_preco">Os primeiros %1$d dias vêm com tudo liberado. Depois, os arquivos da TV continuam grátis para sempre, e a rede vira Pro: uma compra única de %2$s, sem assinatura, válida em todos os Fire TV da sua conta Amazon.</string>
+    <string name="pro_compra_unica">Compra única. Vale em todos os Fire TV da mesma conta Amazon.</string>
+    <string name="pro_consultando">Consultando a Amazon Appstore…</string>
+    <string name="pro_indisponivel">A compra é feita pela Amazon Appstore, que não respondeu nesta TV. Confira a internet e se você está conectado à sua conta Amazon.</string>
+    <string name="pro_pendente">Compra aguardando aprovação: o Pro é liberado assim que a Amazon confirmar.</string>
+    <string name="pro_play_falhou">Não foi possível abrir a Amazon Appstore</string>
+    <string name="pro_sub_ativo">A rede está liberada para sempre nesta conta Amazon — em todo Fire TV onde você usar ela.</string>
+</resources>

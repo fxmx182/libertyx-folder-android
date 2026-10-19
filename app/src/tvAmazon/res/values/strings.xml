@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Fire TV (Amazon Appstore): os textos do Pro que citam a loja. O resto vem de src/main. -->
+<resources>
+    <string name="guia10_ativo">Pro is active: the network is yours for good, on every Fire TV with your Amazon account.</string>
+    <string name="guia10_x">The first %1$d days come with everything unlocked. After that, the TV’s files stay free forever, and the network becomes Pro: a one-time purchase, no subscription, valid on every Fire TV with your Amazon account.</string>
+    <string name="guia10_x_preco">The first %1$d days come with everything unlocked. After that, the TV’s files stay free forever, and the network becomes Pro: a one-time purchase of %2$s, no subscription, valid on every Fire TV with your Amazon account.</string>
+    <string name="pro_compra_unica">One-time purchase. Works on every Fire TV with the same Amazon account.</string>
+    <string name="pro_consultando">Checking the Amazon Appstore…</string>
+    <string name="pro_indisponivel">Purchases go through the Amazon Appstore, which didn’t answer on this TV. Check the internet connection and that you’re signed in to your Amazon account.</string>
+    <string name="pro_pendente">Purchase awaiting approval: Pro unlocks as soon as Amazon confirms it.</string>
+    <string name="pro_play_falhou">Couldn’t open the Amazon Appstore</string>
+    <string name="pro_sub_ativo">The network is unlocked for good on this Amazon account — on every Fire TV where you use it.</string>
+</resources>

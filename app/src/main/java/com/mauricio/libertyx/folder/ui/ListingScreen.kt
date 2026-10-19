@@ -431,7 +431,7 @@ private fun SelectionBar(
                     DropdownMenuItem({ Text(stringResource(R.string.renomear)) }, { setMenu(false); onRenomear() }, enabled = itens.size == 1 && !temShare)
                     DropdownMenuItem({ Text(stringResource(R.string.abrir_com_item)) }, { setMenu(false); onAbrirCom() }, enabled = itens.size == 1 && !itens[0].isDir)
                     // Pasta oculta e bloqueada: a opção nem aparece, para não denunciar que ela existe.
-                    // Na TV não há pasta segura: só "retirar", para quem tinha uma de antes.
+                    // Sem pasta segura (TV e celular da loja): só "retirar", para quem tinha uma de antes.
                     if (noCofre || (com.mauricio.libertyx.folder.BuildConfig.PASTA_SEGURA &&
                             (com.mauricio.libertyx.folder.vault.Vault.visivel || com.mauricio.libertyx.folder.vault.Vault.unlocked.value)))
                     DropdownMenuItem({ Text(stringResource(if (noCofre) R.string.cofre_retirar else R.string.cofre_mover)) },

@@ -103,7 +103,7 @@ fun SettingsScreen(vm: MainVm, screen: Screen.Settings) {
                     }
                 }
             }
-            // Na TV não existe pasta segura. Quem criou uma numa versão de
+            // Sem pasta segura (TV e celular da loja). Quem criou uma numa versão de
             // antes ainda acha aqui como tirar os arquivos e apagá-la — o
             // recurso sumir não pode levar os arquivos de alguém junto.
             if (!BuildConfig.PASTA_SEGURA) {

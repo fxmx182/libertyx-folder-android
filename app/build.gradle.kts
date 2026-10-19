@@ -64,7 +64,7 @@ android {
         // assina o app que chega ao usuário (a Play reassina com a dela), só
         // prova ao Google que o envio veio do dono da conta. Mora fora do
         // repositório; a senha vem de ~/.gradle/gradle.properties. Sem ela,
-        // só o `bundleLoja` falha.
+        // só o `pacotesPlay` falha.
         val envio = project.findProperty("libertyxEnvioArquivo")?.toString()
         if (envio != null) create("envio") {
             storeFile = file(envio)
@@ -74,19 +74,28 @@ android {
         }
     }
 
-    flavorDimensions += "aparelho"
+    flavorDimensions += listOf("aparelho", "loja")
+    //
+    // Os dois vão para a MESMA página da Play (mesmo pacote, mesma compra): a
+    // loja entrega a cada aparelho o pacote compatível de número mais alto. O
+    // de TV exige `leanback`, então celular só recebe o de celular; numa TV os
+    // dois servem, e vence o de TV porque termina em 2 e o de celular em 1 —
+    // desde que os dois saiam do MESMO `pacotesPlay` (mesmo `minutos`).
     //
     // O que muda entre os dois, além da tela de entrada, são três chaves:
-    // - PRO: a TV vai para a Play com 7 dias grátis e a rede como compra única;
-    //   o celular ainda não vai para a loja e segue sem nada disso.
-    // - PASTA_SEGURA: não existe na TV (decisão do dono do app).
+    // - PRO: a TV tem 7 dias grátis e a rede como compra única; no celular é
+    //   tudo grátis (decisão do dono do app).
+    // - PASTA_SEGURA: não existe em nenhum dos dois na loja; quem criou uma
+    //   antes ainda acha em Configurações como retirar os arquivos.
     // - GUIA: o guia de uso da primeira abertura, feito para o controle remoto.
     productFlavors {
         create("celular") {
             dimension = "aparelho"
             buildConfigField("boolean", "PRO", "false")
-            buildConfigField("boolean", "PASTA_SEGURA", "true")
+            buildConfigField("boolean", "PASTA_SEGURA", "false")
             buildConfigField("boolean", "GUIA", "false")
+            versionCode = (minutos * 10 + 1).toInt()
+            versionName = "1.0.1"
             signingConfig = signingConfigs.getByName("tv")
         }
         create("tv") {
@@ -94,13 +103,21 @@ android {
             buildConfigField("boolean", "PRO", "true")
             buildConfigField("boolean", "PASTA_SEGURA", "false")
             buildConfigField("boolean", "GUIA", "true")
-            // Termina em 2, como a TV do LibertyX Player: quando o celular for
-            // para a mesma página da loja (terminando em 1), os números nunca
-            // colidem — a Play recusa dois envios com o mesmo número.
+            // Termina em 2 e o celular em 1, como no LibertyX Player: os
+            // números nunca colidem (a Play recusa números repetidos) e, numa
+            // TV, o de TV vence (ver o comentário de `productFlavors`).
             versionCode = (minutos * 10 + 2).toInt()
-            versionName = "1.0.0"
+            versionName = "1.0.1"
             signingConfig = signingConfigs.getByName("tv")
         }
+
+        // A segunda dimensão: de qual loja o app sai. Só a cobrança muda —
+        // a Google Play Billing não existe no Fire TV, que não tem Play; lá a
+        // compra do Pro é pela Amazon Appstore (`src/tvAmazon`). O celular é
+        // grátis nas duas lojas (no tablet Fire também), então para ele as duas
+        // variantes são o mesmo app.
+        create("play") { dimension = "loja" }
+        create("amazon") { dimension = "loja" }
     }
 
     buildTypes {
@@ -117,7 +134,8 @@ android {
         debug {
             signingConfig = null
         }
-        // O que vai para a Play Store: `./gradlew bundleLoja`. Um tipo de
+        // O que vai para as lojas: `./gradlew pacotesPlay` e
+        // `./gradlew pacotesAmazon`. Um tipo de
         // build, e não opções, porque as duas diferenças não podem ser
         // esquecidas no envio: a assinatura é a de envio e o Pro nunca vem
         // liberado.
@@ -169,25 +187,60 @@ android {
     }
 }
 
-// Só a TV vai para a loja por enquanto: a variante celular+loja nem existe.
+// Na Amazon a assinatura não é a de envio da Play (que só serve para provar ao
+// Google quem enviou): é a mesma dos APKs instalados à mão.
 androidComponents {
-    beforeVariants { v ->
-        if (v.buildType == "loja" && v.productFlavors.any { it.second == "celular" }) v.enable = false
+    onVariants(selector().withBuildType("loja")) { v ->
+        if (v.productFlavors.any { it.second == "amazon" }) v.signingConfig.setConfig(android.signingConfigs.getByName("tv"))
     }
 }
 
-/** O pacote da Play Store, em `dist/play/`. */
+/**
+ * A chave pública que a Amazon gera para cada app (console da Amazon ›
+ * o app › APK Files › "View public key"). Sem ela a cobrança da Amazon não
+ * funciona — então o pacote da loja nem compila sem ela.
+ */
+val chaveAmazon = file("src/tvAmazon/assets/AppstoreAuthenticationKey.pem")
+tasks.matching { it.name == "preTvAmazonLojaBuild" }.configureEach {
+    doFirst {
+        if (!chaveAmazon.exists()) throw GradleException(
+            "Falta ${chaveAmazon.relativeTo(rootDir)}: baixe a chave pública do app no console da Amazon."
+        )
+    }
+}
+
+/** Os APKs da Amazon Appstore, em `dist/amazon/`: Fire TV (com o Pro) e tablet Fire (grátis). */
+val pacotesAmazon = tasks.register<Copy>("pacotesAmazon") {
+    dependsOn("assembleTvAmazonLoja", "assembleCelularAmazonLoja")
+    val saida = layout.buildDirectory.dir("outputs/apk")
+    from(saida.map { it.dir("tvAmazon/loja") }) { include("*.apk"); rename { "LibertyXFolder-FireTV.apk" } }
+    from(saida.map { it.dir("celularAmazon/loja") }) { include("*.apk"); rename { "LibertyXFolder-FireTablet.apk" } }
+    into(rootProject.layout.projectDirectory.dir("dist/amazon"))
+    outputs.upToDateWhen { false }
+}
+
+/** Os pacotes da Play Store, em `dist/play/` — sobem os dois na mesma versão. */
 val publicarPacotes = tasks.register<Copy>("publicarPacotes") {
     val saida = layout.buildDirectory.dir("outputs/bundle")
-    from(saida.map { it.dir("tvLoja") }) { include("*.aab"); rename { "LibertyXFolder-TV.aab" } }
+    from(saida.map { it.dir("celularPlayLoja") }) { include("*.aab"); rename { "LibertyXFolder-Celular.aab" } }
+    from(saida.map { it.dir("tvPlayLoja") }) { include("*.aab"); rename { "LibertyXFolder-TV.aab" } }
     into(rootProject.layout.projectDirectory.dir("dist/play"))
     outputs.upToDateWhen { false }
 }
 
+/**
+ * `./gradlew pacotesPlay`: celular e TV da Play no mesmo build. Não usar
+ * `bundleLoja`, que gera também a variante Amazon (e para sem a chave dela).
+ */
+tasks.register("pacotesPlay") {
+    dependsOn("bundleCelularPlayLoja", "bundleTvPlayLoja")
+    finalizedBy(publicarPacotes)
+}
+
 val publicarApk = tasks.register<Copy>("publicarApk") {
     val saida = layout.buildDirectory.dir("outputs/apk")
-    from(saida.map { it.dir("celular/release") }) { include("*-release.apk"); rename { "LibertyXFolder-Celular.apk" } }
-    from(saida.map { it.dir("tv/release") }) { include("*-release.apk"); rename { "LibertyXFolder-TV.apk" } }
+    from(saida.map { it.dir("celularPlay/release") }) { include("*-release.apk"); rename { "LibertyXFolder-Celular.apk" } }
+    from(saida.map { it.dir("tvPlay/release") }) { include("*-release.apk"); rename { "LibertyXFolder-TV.apk" } }
     into(rootProject.layout.projectDirectory.dir("dist"))
     outputs.upToDateWhen { false }
     doFirst { rootProject.layout.projectDirectory.dir("dist").asFile.listFiles { f -> f.name.endsWith(".apk") }?.forEach { it.delete() } }
@@ -195,8 +248,12 @@ val publicarApk = tasks.register<Copy>("publicarApk") {
 
 tasks.whenTaskAdded {
     if (name == "assembleRelease") finalizedBy(publicarApk)
-    if (name == "bundleLoja") finalizedBy(publicarPacotes)
 }
+
+// Dependências de uma combinação de sabores (tv + loja) pedem a configuração
+// declarada antes; as de um sabor só (`tvImplementation`) nascem sozinhas.
+val tvPlayImplementation by configurations.creating
+val tvAmazonImplementation by configurations.creating
 
 dependencies {
     implementation(libs.androidx.core.ktx)
@@ -214,8 +271,14 @@ dependencies {
     // SMB de verdade: ler, gravar, renomear, apagar.
     testImplementation("junit:junit:4.13.2")
 
-    // Compra pela Google Play — só na TV, a única que vai para a loja.
-    "tvImplementation"(libs.billing)
+    // Compra pela Google Play — só na TV da Play; o celular é grátis.
+    tvPlayImplementation(libs.billing)
+    // A cobrança 8.3.0 ainda puxa o fragment 1.1.0, de 2019, e a Play marca
+    // essa versão como desatualizada no pacote. Declarar a atual aqui faz o
+    // Gradle usar ela no lugar.
+    tvPlayImplementation(libs.androidx.fragment)
+    // Compra pela Amazon Appstore — só no Fire TV.
+    tvAmazonImplementation(libs.amazon.appstore)
 
     implementation(libs.smbj)
     // Só para listar os compartilhamentos de um servidor (RPC srvsvc) — o

@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Fire TV pela Amazon Appstore: o que a cobrança da Amazon (Appstore SDK)
+     precisa, conforme a documentação dela. Soma-se ao manifesto da TV. -->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- Android 11+: sem isto o app não enxerga a Appstore (com.amazon.venezia)
+         nem o App Tester dos testes de compra (com.amazon.sdktestclient). -->
+    <queries>
+        <package android:name="com.amazon.sdktestclient" />
+        <package android:name="com.amazon.venezia" />
+    </queries>
+
+    <application>
+        <!-- Por onde a Appstore devolve as respostas de compra. -->
+        <receiver
+            android:name="com.amazon.device.iap.ResponseReceiver"
+            android:exported="true"
+            android:permission="com.amazon.inapp.purchasing.Permission.NOTIFY">
+            <intent-filter>
+                <action android:name="com.amazon.inapp.purchasing.NOTIFY" />
+            </intent-filter>
+        </receiver>
+    </application>
+</manifest>
