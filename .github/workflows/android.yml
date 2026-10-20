@@ -1,0 +1,157 @@
+name: Build APK de TV (GitHub)
+
+# O APK de TV que sai daqui é o do sabor `tvGithub`: o mesmo app da Play e da
+# Amazon, com a compra do Pro pela chave LibertyX (Bitcoin/USDT pelo bot do
+# Telegram) no lugar da cobrança da loja. É o que o Fire TV e quem instala à
+# mão baixam, sempre pelo mesmo link:
+#
+#   /releases/latest/download/LibertyXFolder-TV.apk
+#
+# Os pacotes das lojas continuam saindo desta máquina (`pacotesPlay`,
+# `pacotesAmazon`), com a chave de envio, que não mora no GitHub.
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - "**.md"
+      - "loja/**"
+  workflow_dispatch:
+
+concurrency:
+  group: android-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Compilar, testar e publicar
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: write   # para publicar os releases
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - uses: android-actions/setup-android@v4
+        with:
+          packages: "platform-tools platforms;android-36 build-tools;36.0.0"
+
+      - name: Cache do Gradle
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: gradle-${{ hashFiles('gradle/libs.versions.toml', '**/*.gradle.kts') }}
+          restore-keys: gradle-
+
+      # A chave não mora no repositório, que é público: vem do secret. É a
+      # `folder-tv.jks` de sempre — a registrada no Google para o pacote, e a
+      # mesma dos APKs da pasta dist/: um atualiza por cima do outro.
+      - name: Restaurar a chave de assinatura
+        env:
+          KEYSTORE: ${{ secrets.FOLDER_TV_KEYSTORE_BASE64 }}
+        run: |
+          test -n "$KEYSTORE" || { echo "::error title=Sem chave::falta o secret FOLDER_TV_KEYSTORE_BASE64"; exit 1; }
+          mkdir -p keystore
+          echo "$KEYSTORE" | base64 -d > keystore/folder-tv.jks
+
+      - name: Compilar e testar
+        run: |
+          set -o pipefail
+          chmod +x gradlew
+          ./gradlew assembleTvGithubRelease testTvGithubReleaseUnitTest --no-daemon 2>&1 | tee build.log
+
+      # O log do job só é baixável com admin no repositório; as anotações de um
+      # repositório público, qualquer um lê. Os erros viram anotação.
+      - name: Republicar erros como anotação
+        if: failure()
+        run: |
+          python3 - <<'PY'
+          import re, pathlib
+          log = pathlib.Path("build.log")
+          if not log.exists():
+              print("::error title=Sem log::build.log não foi gerado")
+              raise SystemExit(0)
+          text = log.read_text(errors="replace")
+          seen, errors = set(), []
+          for line in text.splitlines():
+              if re.match(r"^e: |error:|^FAILURE|Caused by:|FAILED$", line.strip()):
+                  line = line.strip()
+                  if line not in seen:
+                      seen.add(line)
+                      errors.append(line)
+          if not errors:
+              errors = ["Nenhuma linha de erro encontrada. Fim do log:", "\n".join(text.splitlines()[-40:])]
+          body = "\n".join(errors)[:6000]
+          enc = body.replace("%", "%25").replace("\r", "%0D").replace("\n", "%0A")
+          print(f"::error title=Erros ({len(errors)})::{enc}")
+          PY
+
+      - name: Nome de gente no APK
+        run: |
+          mkdir -p dist
+          cp app/build/outputs/apk/tvGithub/release/app-tv-github-release.apk dist/LibertyXFolder-TV.apk
+          ls -lh dist/
+
+      - name: Publicar artefato
+        uses: actions/upload-artifact@v4
+        with:
+          name: LibertyXFolder-TV-apk
+          path: dist/LibertyXFolder-TV.apk
+          retention-days: 30
+          if-no-files-found: error
+
+      # Um release novo a cada build (data e commit na etiqueta), o mais recente
+      # marcado como "latest": o histórico existe e o link de instalar não muda.
+      - name: Publicar release
+        if: github.ref == 'refs/heads/main'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          VERSAO=$(grep -A12 'create("tv")' app/build.gradle.kts | grep -oP 'versionName = "\K[^"]+')
+          DATA=$(date -u +%Y.%m.%d)
+          TAG="v${VERSAO}-${DATA}-${GITHUB_SHA:0:7}"
+          {
+            git log -1 --pretty=%s
+            echo
+            echo "**LibertyX Folder para Google TV e Fire TV.** Os arquivos da TV são grátis para sempre;"
+            echo "a rede (servidores SMB) é Pro, com 7 dias grátis. O Pro se compra com Bitcoin ou USDT"
+            echo "pelo bot do Telegram ([@libertx_partition_bot](https://t.me/libertx_partition_bot?start=folder)),"
+            echo "e a chave é colada pelo celular no endereço que a TV mostra."
+            echo
+            echo "No Fire TV ou na Google TV, instale pelo app **Downloader** com o endereço:"
+            echo
+            echo '```'
+            echo "https://github.com/${GITHUB_REPOSITORY}/releases/latest/download/LibertyXFolder-TV.apk"
+            echo '```'
+            echo
+            echo "Este link não muda: ele sempre entrega o build mais recente."
+            echo
+            echo "---"
+            echo
+            echo "Commit \`${GITHUB_SHA:0:7}\` · build ${GITHUB_RUN_NUMBER}"
+          } > notas.md
+          gh release create "$TAG" dist/LibertyXFolder-TV.apk \
+            --title "LibertyX Folder TV — ${DATA} (${GITHUB_SHA:0:7})" \
+            --notes-file notas.md \
+            --latest
+
+      - name: Podar releases antigos
+        if: github.ref == 'refs/heads/main'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release list --limit 100 --json tagName \
+            --jq '.[] | select(.tagName | startswith("v")) | .tagName' \
+            | tail -n +11 \
+            | while read -r tag; do
+                echo "removendo $tag"
+                gh release delete "$tag" --yes --cleanup-tag || true
+              done

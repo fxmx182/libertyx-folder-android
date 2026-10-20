@@ -56,6 +56,21 @@ Terminado o teste, os computadores continuam aparecendo na tela inicial: o que t
 - Testar a compra/o teste aqui: `-PlibertyxLoja` (trava) e `-PlibertyxDiasDeTeste=0` (teste vencido).
 - Lançamento: `loja/PASSO-A-PASSO.md`, `loja/FICHA.md`, imagens em `loja/imagens/`, política em `PRIVACY.md`.
 
+### O APK do GitHub (chave LibertyX)
+
+Além da Play e da Amazon, a TV sai numa terceira loja, `github`
+(`./gradlew assembleTvGithubRelease`): o mesmo app, com o Pro comprado pela
+**chave LibertyX** — Bitcoin ou USDT/USDC pelo bot do Telegram
+([@libertx_partition_bot](https://t.me/libertx_partition_bot?start=folder)). A
+chave (produto 3, ou 9 do pacote) é conferida no aparelho, sem internet
+(`pro/Chave.kt`), e colada pelo celular numa página que a própria TV serve em
+`http://<ip-da-tv>:8787` enquanto o painel está aberto (`pro/AtivacaoNaRede.kt`).
+Play e Amazon não têm nada disso: as duas proíbem outro meio de pagamento.
+
+O CI (`.github/workflows/android.yml`) publica a cada push:
+[`LibertyXFolder-TV.apk`](https://github.com/fxmx182/libertyx-folder-android/releases/latest/download/LibertyXFolder-TV.apk),
+assinado com a `folder-tv.jks` (secret `FOLDER_TV_KEYSTORE_BASE64`).
+
 ## Guia de uso (TV)
 
 `ui/Guia.kt`: dez páginas, cada uma com uma cena do próprio app encolhida e animada ao lado de um texto curto — controle remoto, tela inicial, pastas, seleção, copiar/mover, rede, assistir sem baixar, pesquisa e o Pro. ◀ ▶ mudam de página de qualquer lugar (os botões ficam em coluna para as setas laterais não serem deles); Voltar volta uma página. Aparece antes do pedido de permissão; flag `guia.visto.v1`. **Ao mudar uma ferramenta, mude a cena e o texto dela no guia.**
