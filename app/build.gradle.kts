@@ -95,7 +95,7 @@ android {
             buildConfigField("boolean", "PASTA_SEGURA", "false")
             buildConfigField("boolean", "GUIA", "false")
             versionCode = (minutos * 10 + 1).toInt()
-            versionName = "1.0.1"
+            versionName = "1.0.2"
             signingConfig = signingConfigs.getByName("tv")
         }
         create("tv") {
@@ -107,7 +107,7 @@ android {
             // números nunca colidem (a Play recusa números repetidos) e, numa
             // TV, o de TV vence (ver o comentário de `productFlavors`).
             versionCode = (minutos * 10 + 2).toInt()
-            versionName = "1.0.1"
+            versionName = "1.0.2"
             signingConfig = signingConfigs.getByName("tv")
         }
 

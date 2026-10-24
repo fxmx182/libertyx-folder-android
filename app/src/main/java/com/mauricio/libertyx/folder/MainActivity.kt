@@ -100,12 +100,15 @@ class MainActivity : ComponentActivity() {
                         ) { s ->
                             when (s) {
                                 is Screen.Home -> {
-                                    Box(Modifier.fillMaxSize()) {
-                                        HomeScreen(vm, s)
+                                    // A barra de colar fica EMBAIXO da lista, e não por cima
+                                    // dela: sobreposta, o foco do controle remoto entrava na
+                                    // barra e a seta para cima não achava mais a lista — na
+                                    // TV, quem copiava algo da rede ficava preso no "Copiar
+                                    // para cá" sem conseguir abrir a pasta de destino.
+                                    Column(Modifier.fillMaxSize()) {
+                                        Box(Modifier.weight(1f)) { HomeScreen(vm, s) }
                                         vm.clip?.let { c ->
-                                            Box(Modifier.align(Alignment.BottomCenter)) {
-                                                com.mauricio.libertyx.folder.ui.PasteBar(c, false, { vm.clip = null }, null)
-                                            }
+                                            com.mauricio.libertyx.folder.ui.PasteBar(c, false, { vm.clip = null }, null)
                                         }
                                     }
                                 }

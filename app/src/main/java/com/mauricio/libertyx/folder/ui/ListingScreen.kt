@@ -456,8 +456,12 @@ fun PasteBar(clip: Clip, habilitado: Boolean, onCancelar: () -> Unit, onColar: (
             Row(Modifier.fillMaxWidth().padding(8.dp), horizontalArrangement = Arrangement.SpaceEvenly) {
                 TextButton(onClick = onCancelar, Modifier.weight(1f).tvFocus(24.dp)) { Text(stringResource(R.string.cancelar)) }
                 HorizontalDivider(Modifier.height(24.dp).size(1.dp, 24.dp).align(Alignment.CenterVertically))
-                TextButton(onClick = { onColar?.invoke() }, Modifier.weight(1f).tvFocus(24.dp), enabled = habilitado && onColar != null) {
-                    Text(stringResource(if (clip.mover) R.string.mover_para_ca else R.string.copiar_para_ca), fontWeight = FontWeight.Bold, color = Lx.ouro)
+                val pode = habilitado && onColar != null
+                // Onde não dá para colar (a tela inicial, o topo da rede), o botão
+                // aparece apagado: dourado parecia ativo, e não fazia nada.
+                TextButton(onClick = { onColar?.invoke() }, Modifier.weight(1f).tvFocus(24.dp), enabled = pode) {
+                    Text(stringResource(if (clip.mover) R.string.mover_para_ca else R.string.copiar_para_ca), fontWeight = FontWeight.Bold,
+                        color = if (pode) Lx.ouro else Lx.tenue)
                 }
             }
         }
